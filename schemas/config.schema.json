@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tech-advisory-board/config.schema.json",
+  "title": "TAB Project Config",
+  "description": "Project-level configuration at <project-root>/TAB/config.json. Team-shared values are stored here; personal values live in the plugin's userConfig (see ARCHITECTURE.md §8.3).",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {"type": "string"},
+    "project_name": {"type": "string"},
+    "default_stage": {"enum": ["POC", "MVP", "Full"]},
+    "language_preference": {
+      "type": "string",
+      "description": "BCP 47 tag used when the user's first message is ambiguous. Typically provided via userConfig, not here, unless the team wants to pin a language."
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "max_cost_per_session_usd": {"type": "number", "minimum": 0},
+        "warn_at_usd": {"type": "number", "minimum": 0},
+        "max_duration_s": {"type": "integer", "minimum": 1}
+      }
+    },
+    "preferences": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "cloud": {"type": "string"},
+        "preferred_languages": {"type": "array", "items": {"type": "string"}},
+        "avoided_licenses": {"type": "array", "items": {"type": "string"}},
+        "team_size": {"type": "integer", "minimum": 1},
+        "team_expertise": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "legacy_stack": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "must_consider": {"type": "array", "items": {"type": "string"}},
+        "must_integrate_with": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "cache": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "share_across_projects": {"type": "boolean"},
+        "max_age_fresh_days": {"type": "integer", "minimum": 1},
+        "max_age_stale_days": {"type": "integer", "minimum": 1}
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "auto_generate_adr": {"type": "boolean"},
+        "auto_archive_sessions": {"type": "boolean"},
+        "session_archive_idle_hours": {"type": "number", "minimum": 0},
+        "use_git_root": {
+          "type": "boolean",
+          "description": "If true, tab-init-dir places TAB/ at the git root instead of $PWD (§2.2.1)."
+        }
+      }
+    },
+    "adversarial": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "auditor_mandatory_modes": {
+          "type": "array",
+          "items": {"enum": ["Standard", "Complete", "Complete+", "Rechallenge"]}
+        },
+        "supervisor_trigger_threshold": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "Fraction of advisors scoring same proposal >=8 that triggers supervisor. Default 0.8."
+        },
+        "concession_ratio_threshold": {
+          "type": "number",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "description": "concessions_made / attacks_received threshold that forces cross-exam round 2. Default 0.6."
+        },
+        "auditor_override_reason": {
+          "type": "string",
+          "description": "Required if auditor_mandatory_modes narrower than [Complete, Complete+, Rechallenge]."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,170 @@
+#!/usr/bin/env bash
+# tab-init-dir — lazy initialization of TAB/ under the user's project root.
+# Idempotent: safe to re-run. Also archives idle sessions (>N hours).
+#
+# Usage:
+#   tab-init-dir [--use-git-root] [--archive-idle-hours N] [--base DIR]
+#
+# Outputs (JSON on stdout):
+#   {"tab_dir": "...", "created": true|false, "archived": [...]}
+#
+# Reads TAB/config.json if present for defaults. CLI flags win over config.
+# See ARCHITECTURE.md §2.2, §2.2.1, §7.7.
+set -euo pipefail
+
+USE_GIT_ROOT=false
+ARCHIVE_IDLE_HOURS=""
+BASE=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --use-git-root)           USE_GIT_ROOT=true ;;
+        --archive-idle-hours)     ARCHIVE_IDLE_HOURS="$2"; shift ;;
+        --base)                   BASE="$2"; shift ;;
+        -h|--help)
+            sed -n '2,14p' "$0" | sed 's/^# \?//'
+            exit 0 ;;
+        *) echo "Unknown flag: $1" >&2; exit 2 ;;
+    esac
+    shift
+done
+
+if [[ -z "$BASE" ]]; then
+    BASE="$PWD"
+    if [[ "$USE_GIT_ROOT" == true ]]; then
+        if git_root=$(git -C "$BASE" rev-parse --show-toplevel 2>/dev/null); then
+            BASE="$git_root"
+        fi
+    fi
+fi
+
+TAB_DIR="$BASE/TAB"
+CREATED=false
+
+if [[ ! -d "$TAB_DIR" ]]; then
+    mkdir -p "$TAB_DIR/decisions" "$TAB_DIR/sessions/archived"
+    CREATED=true
+else
+    mkdir -p "$TAB_DIR/decisions" "$TAB_DIR/sessions/archived"
+fi
+
+# Resolve archive-idle-hours: CLI > config > default 24
+if [[ -z "$ARCHIVE_IDLE_HOURS" ]]; then
+    if [[ -f "$TAB_DIR/config.json" ]] && command -v python3 >/dev/null 2>&1; then
+        ARCHIVE_IDLE_HOURS=$(python3 -c '
+import json, sys
+try:
+    with open("'"$TAB_DIR/config.json"'") as f:
+        cfg = json.load(f)
+    print(cfg.get("output", {}).get("session_archive_idle_hours", 24))
+except Exception:
+    print(24)
+' 2>/dev/null || echo 24)
+    else
+        ARCHIVE_IDLE_HOURS=24
+    fi
+fi
+
+# README.md (describes the layout)
+if [[ ! -f "$TAB_DIR/README.md" ]]; then
+    cat > "$TAB_DIR/README.md" <<'EOF'
+# TAB — Technical Advisory Board outputs
+
+This directory is produced by the `tech-advisory-board` Claude Code plugin.
+Every TAB session writes its artifacts under `sessions/<id>/`. Durable
+decisions are promoted to `decisions/NNNN-<slug>.md` (MADR format).
+
+## Layout
+
+- `config.json` — project preferences (team-shared)
+- `index.md` — navigable ADR index
+- `decisions/` — versioned ADRs (commit to VCS)
+- `sessions/` — working artifacts per session (synthesis.json, telemetry.json, etc.)
+- `sessions/archived/` — sessions idle beyond the configured threshold
+
+## Version control
+
+Commit `config.json`, `index.md`, `decisions/`. Consider gitignoring
+`sessions/` if the working data is too noisy:
+
+```gitignore
+# Ephemeral TAB session data (optional — keep decisions/ tracked)
+TAB/sessions/
+```
+
+Regenerate this directory layout at any time with `tab-init-dir`.
+EOF
+fi
+
+# index.md (stub)
+if [[ ! -f "$TAB_DIR/index.md" ]]; then
+    cat > "$TAB_DIR/index.md" <<'EOF'
+# Decisions Index
+
+Generated and maintained by the TAB plugin. Entries are appended as each
+ADR is produced; statuses updated when decisions are superseded.
+
+| # | Title | Status | Date | Session |
+|---|---|---|---|---|
+
+_No decisions recorded yet._
+EOF
+fi
+
+# Archive idle sessions
+ARCHIVED_JSON="[]"
+if command -v python3 >/dev/null 2>&1; then
+    ARCHIVED_JSON=$(python3 - <<PYEOF
+import json, os, shutil
+from datetime import datetime, timezone
+
+tab_dir = "$TAB_DIR"
+threshold_h = float("$ARCHIVE_IDLE_HOURS")
+sessions_dir = os.path.join(tab_dir, "sessions")
+archived_dir = os.path.join(sessions_dir, "archived")
+
+moved = []
+if os.path.isdir(sessions_dir):
+    now = datetime.now(timezone.utc)
+    for entry in sorted(os.listdir(sessions_dir)):
+        if entry == "archived":
+            continue
+        session_path = os.path.join(sessions_dir, entry)
+        if not os.path.isdir(session_path):
+            continue
+        state_path = os.path.join(session_path, "state.json")
+        if not os.path.isfile(state_path):
+            continue
+        try:
+            with open(state_path) as f:
+                state = json.load(f)
+            last = state.get("last_updated")
+            phase = state.get("phase_completed", "")
+            if not last:
+                continue
+            last_dt = datetime.fromisoformat(last.replace("Z", "+00:00"))
+            idle_h = (now - last_dt).total_seconds() / 3600
+            is_complete = phase in ("cost-report", "archival")
+            if idle_h > threshold_h or is_complete:
+                target = os.path.join(archived_dir, entry)
+                if os.path.exists(target):
+                    continue
+                shutil.move(session_path, target)
+                moved.append(entry)
+        except Exception:
+            continue
+
+print(json.dumps(moved))
+PYEOF
+)
+fi
+
+python3 -c "
+import json
+print(json.dumps({
+    'tab_dir': '$TAB_DIR',
+    'created': $( [[ "$CREATED" == true ]] && echo True || echo False ),
+    'archive_threshold_h': float('$ARCHIVE_IDLE_HOURS'),
+    'archived': json.loads('''$ARCHIVED_JSON''')
+}, indent=2))
+" 2>/dev/null || echo "{\"tab_dir\":\"$TAB_DIR\",\"created\":$CREATED}"

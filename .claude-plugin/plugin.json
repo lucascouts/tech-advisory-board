@@ -1,0 +1,69 @@
+{
+  "name": "tech-advisory-board",
+  "version": "0.1.0",
+  "description": "Multi-agent advisory board for technical decisions — stack selection, architecture choices, framework/database comparisons, project planning. Champions debate, Advisors evaluate, Scout maps landscape. Backed by current web research via MCPs (perplexity, context7, brave-search).",
+  "author": {
+    "name": "lucascouts",
+    "email": "lucascs@protonmail.com",
+    "url": "https://github.com/lucascouts"
+  },
+  "homepage": "https://github.com/lucascouts/tech-advisory-board",
+  "repository": "https://github.com/lucascouts/tech-advisory-board.git",
+  "license": "MIT",
+  "keywords": [
+    "tech-advisory",
+    "architecture",
+    "stack-selection",
+    "multi-agent",
+    "decision-making",
+    "technology-evaluation"
+  ],
+  "userConfig": {
+    "max_cost_per_session_usd": {
+      "title": "Max cost per session (USD)",
+      "description": "Abort a TAB session if the estimated cost exceeds this threshold (USD). Overrides TAB/config.json budget.max_cost_per_session_usd.",
+      "type": "number",
+      "sensitive": false,
+      "default": 5.00
+    },
+    "warn_at_usd": {
+      "title": "Cost warning threshold (USD)",
+      "description": "Emit a soft cost warning when session spend crosses this threshold (USD).",
+      "type": "number",
+      "sensitive": false,
+      "default": 3.00
+    },
+    "language_preference": {
+      "title": "Preferred output language",
+      "description": "Preferred output language as a BCP 47 tag (e.g. en, pt-BR). Used when the user's first message is ambiguous. Applies globally across all projects.",
+      "type": "string",
+      "sensitive": false
+    },
+    "default_mode": {
+      "title": "Default session mode",
+      "description": "Mode used when the Moderator's complexity classification is ambiguous. One of Express, Quick, Standard, Complete, Complete+. Leave unset to let the Moderator classify automatically.",
+      "type": "string",
+      "sensitive": false
+    },
+    "auditor_enabled": {
+      "title": "Enable mandatory Auditor",
+      "description": "When true (default), the Auditor subagent runs in Complete / Complete+ / Rechallenge modes. Set false to skip — requires an auditor_override_reason in TAB/config.json.",
+      "type": "boolean",
+      "sensitive": false,
+      "default": true
+    },
+    "supervisor_gate_enabled": {
+      "title": "Enable Supervisor consensus-theater gate",
+      "description": "When true (default), the Moderator invokes the Supervisor subagent if any of the four §12.1 consensus-theater triggers fire after the advisor phase. Set false to disable the gate.",
+      "type": "boolean",
+      "sensitive": false,
+      "default": true
+    },
+    "adr_dir_override": {
+      "title": "ADR output directory override",
+      "description": "Override the default TAB/decisions/ directory for generated ADRs. Absolute path or relative to the project root. Leave unset to use the default.",
+      "type": "string",
+      "sensitive": false
+    }
+  }
+}

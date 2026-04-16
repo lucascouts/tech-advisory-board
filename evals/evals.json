@@ -1,0 +1,863 @@
+{
+  "skill_name": "tech-advisory-board",
+  "evals": [
+    {
+      "id": 1,
+      "should_trigger": true,
+      "prompt": "Quero criar um cardápio digital online para restaurantes. A ideia é que o dono do restaurante cadastre os pratos, categorias, preços, e o cliente acesse pelo celular escaneando um QR code. Precisa ter foto dos pratos, opção de marcar favoritos, e filtro por categoria. Minha equipe sou eu e mais um dev junior, ambos com experiência em JavaScript e um pouco de Python. Orçamento apertado, quero começar com um MVP pra validar com uns 10 restaurantes da região. Me ajuda a definir a stack completa?",
+      "expected_output": "Análise completa com context extraction, classificação como MVP, research de frameworks atuais, landscape com shortlist e discard table, debate entre champions com stacks como Next.js, Remix, ou similar, evaluation de advisors, e síntese final com recomendação primária, alternativas, e caminho de evolução POC→MVP→Full",
+      "files": [],
+      "expectations": [
+        "Output is entirely in Brazilian Portuguese (pt-BR) except for technical terms",
+        "Project is classified as MVP (or POC→MVP path)",
+        "At least 3 champions present different stack proposals",
+        "A discard table is present with alternatives considered but rejected",
+        "The synthesis includes a stage evolution path (POC→MVP→Full)",
+        "Specialists are named with their roles and speak in character",
+        "Team constraints (2 devs, JS/Python experience) are factored into recommendations",
+        "Budget constraints influence the recommendations",
+        "Advisor evaluations are produced independently (parallel subagents)"
+      ],
+      "assertions": [
+        "Output in pt-BR except technical terms",
+        "Classified as MVP or POC-to-MVP",
+        "At least 3 champion stack proposals",
+        "Discard table with rejected alternatives",
+        "Stage evolution path POC→MVP→Full present",
+        "Named specialists speak in character",
+        "Team constraints (2 devs, JS/Python) factored in",
+        "Budget constraints influence recommendations",
+        "Advisor evaluations produced independently"
+      ]
+    },
+    {
+      "id": 2,
+      "should_trigger": true,
+      "prompt": "Estou planejando uma plataforma SaaS B2B de gestão de projetos para agências de marketing digital. Multi-tenant, cada agência tem seus projetos, clientes, tarefas, timeline, e precisa de colaboração em tempo real (tipo quando alguém edita uma tarefa, os outros veem ao vivo). Time de 5 devs, 2 seniors com experiência forte em TypeScript/Node e React, 2 plenos que sabem Python, e 1 junior. Temos 8 meses pra primeira versão. Orçamento de infra de uns R$3000/mês no início. Quero algo que aguente crescer pra 500 agências sem reescrever tudo. Qual stack e arquitetura vocês recomendam?",
+      "expected_output": "Análise profunda cobrindo multi-tenancy, real-time collaboration, com debate entre stacks considerando a experiência mista do time. Deve incluir discussão de protocolos real-time (WebSocket vs SSE), estratégia de multi-tenancy (schema per tenant vs row-level), e caminho de escala",
+      "files": [],
+      "expectations": [
+        "Multi-tenancy strategy is explicitly debated (schema-per-tenant vs row-level vs database-per-tenant)",
+        "Real-time protocol specialist is invoked as an independent advisor subagent",
+        "At least one Vanguard champion presents an emerging alternative",
+        "The R$3000/month budget constraint is factored into infrastructure recommendations",
+        "Advisors produce independent scores — raw score matrix is visible in synthesis",
+        "Cross-examination occurs between champions before advisor subagents are launched",
+        "Final synthesis includes consolidated score matrix with divergence analysis",
+        "Evolution path from MVP to 500-agency scale is clearly mapped"
+      ],
+      "assertions": [
+        "Multi-tenancy strategy debated (schema vs row-level vs DB-per-tenant)",
+        "Real-time protocol advisor invoked independently",
+        "At least one Vanguard champion with emerging alternative",
+        "R$3000/month budget factored into infra recommendations",
+        "Independent advisor scores with raw score matrix",
+        "Cross-examination between champions before advisor evaluation",
+        "Consolidated score matrix with divergence analysis",
+        "Evolution path from MVP to 500-agency scale mapped"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "tenho uma ideia meio maluca, quero fazer um framework open source pra criar jogos de RPG de mesa digitais, tipo um toolkit que outros devs usam pra criar sistemas de RPG customizados (tipo D&D, Savage Worlds, etc). precisa ter engine de regras flexível, suporte a fichas de personagem dinâmicas, sistema de rolagem de dados, e uma UI pra jogar online com mapa e tokens. to sozinho por enquanto mas conheço rust e typescript bem. nunca lancei open source antes. por onde começo?",
+      "expected_output": "Análise reconhecendo a complexidade e escopo ambicioso, classificação como POC com path claro. Debate entre abordagens (monolito vs modular, Rust core + TS frontend, full TS, etc). Discussão sobre rule engine design, open source strategy, e como validar a ideia antes de construir tudo",
+      "files": [],
+      "expectations": [
+        "Project is classified as POC given solo developer and ambitious scope",
+        "The analysis addresses the open-source strategy (licensing, community building)",
+        "Rule engine architecture is specifically debated",
+        "Both Rust and TypeScript expertise are leveraged in recommendations",
+        "A Wildcard or unconventional approach is considered given the ambitious scope",
+        "The recommendation includes what to build FIRST to validate the concept",
+        "Risk assessment flags solo-developer and scope risks explicitly"
+      ],
+      "assertions": [
+        "Classified as POC for solo developer with ambitious scope",
+        "Open-source strategy addressed (licensing, community)",
+        "Rule engine architecture debated",
+        "Rust and TypeScript expertise leveraged",
+        "Wildcard or unconventional approach considered",
+        "Recommendation on what to build first for validation",
+        "Risk assessment flags solo-developer and scope risks"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 4,
+      "prompt": "Qual formatter devo usar com Python? Estou entre Ruff e Black.",
+      "expected_output": "Express mode — Scout apresenta shortlist compacta, Moderador dá recomendação direta sem Champions ou Advisors",
+      "files": [],
+      "expectations": [
+        "Classified as Trivial/Express",
+        "No champion presentations",
+        "Compact recommendation in ~1 message",
+        "Mentions both Ruff and Black with current versions",
+        "Output in pt-BR"
+      ],
+      "assertions": [
+        "Classified as Trivial/Express",
+        "No champion presentations",
+        "Compact single-message recommendation",
+        "Both Ruff and Black mentioned with versions",
+        "Output in pt-BR"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 5,
+      "prompt": "Preciso escolher um banco de dados para armazenar dados de IoT — sensores enviando ~100K eventos por segundo. Dados precisam ser consultados por range de tempo. Time de 3 devs com experiência em PostgreSQL.",
+      "expected_output": "Padrão mode com debate entre TimescaleDB, InfluxDB, QuestDB e possivelmente ClickHouse. Data-focused advisor invoked with identity card.",
+      "files": [],
+      "expectations": [
+        "Classified as Médio/Padrão",
+        "At least 3 champions for different time-series solutions",
+        "A Data-focused advisor is invoked with identity card and random name",
+        "PostgreSQL experience is factored into recommendations",
+        "Throughput of 100K events/s is addressed in benchmarks",
+        "Evolution path from current scale to 10x"
+      ],
+      "assertions": [
+        "Classified as Medio/Padrao mode",
+        "At least 3 champions for time-series solutions",
+        "Data-focused advisor invoked with identity card and random name",
+        "PostgreSQL experience factored in",
+        "100K events/s throughput addressed in benchmarks",
+        "Evolution path from current to 10x scale"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 6,
+      "prompt": "tenho uma ideia de app, o que vocês acham?",
+      "expected_output": "Moderador entra em context extraction, fazendo perguntas sobre o que está sendo construído, público-alvo, equipe, etc.",
+      "files": [],
+      "expectations": [
+        "Context extraction questions are asked before any analysis",
+        "At least 3-5 questions from the question bank",
+        "No premature recommendations",
+        "Moderador persona is present"
+      ],
+      "assertions": [
+        "Context extraction questions before any analysis",
+        "At least 3-5 questions from question bank",
+        "No premature recommendations",
+        "Moderador persona present"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 7,
+      "prompt": "Preciso criar um editor visual drag-and-drop tipo Figma para criar dashboards customizáveis. Time de 3 devs com experiência forte em React. Queremos um MVP em 4 meses.",
+      "expected_output": "Completo mode com debate sobre canvas libraries (Konva, Fabric.js, react-flow, etc). Frontend and UX advisors invoked with identity cards.",
+      "files": [],
+      "expectations": [
+        "Classified as Alto/Completo",
+        "A Frontend-focused advisor is invoked with identity card and random name",
+        "A UX-focused advisor is invoked with identity card and random name",
+        "Canvas/rendering library debate is central",
+        "MVP timeline of 4 months factors into recommendations",
+        "At least one Vanguard champion"
+      ],
+      "assertions": [
+        "Classified as Alto/Completo",
+        "Frontend-focused advisor invoked with identity card and random name",
+        "UX-focused advisor invoked with identity card and random name",
+        "Canvas/rendering library debate central",
+        "4-month MVP timeline factored in",
+        "At least one Vanguard champion"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 8,
+      "prompt": "Preciso migrar nossa aplicação de Heroku para algo mais barato. Temos 3 microserviços em Node.js, banco PostgreSQL no RDS, Redis para cache. Cerca de 50K usuários mensais. Orçamento máximo de R$500/mês para infra.",
+      "expected_output": "Padrão mode com debate entre Railway, Fly.io, DigitalOcean, e possivelmente Hetzner/Coolify. Infrastructure advisors invoked with identity cards.",
+      "files": [],
+      "expectations": [
+        "Infrastructure-focused advisors are invoked with identity cards and random names",
+        "Cost projection is central to recommendations",
+        "R$500/month budget constraint is respected",
+        "Migration path from Heroku is explicitly addressed",
+        "Existing stack (Node.js, PostgreSQL, Redis) is preserved or justified if changed"
+      ],
+      "assertions": [
+        "Infrastructure-focused advisors invoked with identity cards and random names",
+        "Cost projection central to recommendations",
+        "R$500/month budget constraint respected",
+        "Heroku migration path explicitly addressed",
+        "Existing stack (Node.js, PostgreSQL, Redis) preserved or justified"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 9,
+      "prompt": "Estou entre Next.js e Remix para o frontend do meu projeto. Já tenho o backend pronto em Node. Time de 2 devs com experiência em React. Me ajuda a decidir?",
+      "expected_output": "Rápido mode com 2 Champions (Next.js e Remix), matriz simplificada, recomendação direta",
+      "files": [],
+      "expectations": [
+        "Classified as Simples/Rápido",
+        "Exactly 2 champions (one for each option)",
+        "Simplified comparison matrix present",
+        "No cross-examination (Rápido mode)",
+        "Backend compatibility is addressed"
+      ],
+      "assertions": [
+        "Classified as Simples/Rapido",
+        "Exactly 2 champions (Next.js and Remix)",
+        "Simplified comparison matrix present",
+        "No cross-examination in Rapido mode",
+        "Backend compatibility addressed"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 10,
+      "prompt": "Qual ORM usar com PostgreSQL em Node.js? Quero que façam a análise no modo completo.",
+      "expected_output": "Apesar de ser uma decisão simples, o modo completo é usado conforme pedido do usuário. Champions para Prisma, Drizzle, TypeORM/Knex, etc.",
+      "files": [],
+      "expectations": [
+        "User override to Completo mode is respected",
+        "At least 3 champions present full proposals",
+        "Cross-examination phase occurs",
+        "Full comparative matrix with weights",
+        "ORM-specific criteria (migrations, type safety, query builder vs schema-first)"
+      ],
+      "assertions": [
+        "User override to Completo mode respected",
+        "At least 3 champions with full proposals",
+        "Cross-examination phase occurs",
+        "Full comparative matrix with weights",
+        "ORM-specific criteria covered (migrations, type safety, query builder)"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 11,
+      "prompt": "Fix the bug in line 43 of auth.ts",
+      "should_trigger": false,
+      "reason": "Debugging task, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 12,
+      "prompt": "Write unit tests for the UserService class",
+      "should_trigger": false,
+      "reason": "Implementation task, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 13,
+      "prompt": "Refactor this function to use async/await",
+      "should_trigger": false,
+      "reason": "Refactoring task, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 14,
+      "prompt": "Can you explain how React hooks work?",
+      "should_trigger": false,
+      "reason": "Educational question, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 15,
+      "prompt": "Deploy this to production",
+      "should_trigger": false,
+      "reason": "Operational task, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 16,
+      "prompt": "Review this pull request",
+      "should_trigger": false,
+      "reason": "Code review task, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 17,
+      "prompt": "How do I configure ESLint in my project?",
+      "should_trigger": false,
+      "reason": "Setup/configuration task, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 18,
+      "prompt": "Translate this error message to Portuguese",
+      "should_trigger": false,
+      "reason": "Translation task, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 19,
+      "prompt": "Run npm install and tell me what happens",
+      "should_trigger": false,
+      "reason": "Command execution task, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 20,
+      "prompt": "Create a CRUD API in FastAPI with endpoints for users and products",
+      "should_trigger": false,
+      "reason": "Direct implementation task, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 21,
+      "prompt": "/tab \"analise o projeto nessa pasta e me diga o que melhorar\"",
+      "expected_output": "Intent detected as Analyze. Auto-detects project context, invokes Advisors to evaluate existing architecture, produces strengths/risks/improvement recommendations",
+      "files": [],
+      "expectations": [
+        "Intent is classified as Analyze",
+        "Auto-detected context is used (extract-context.sh output)",
+        "Advisors evaluate the existing project as independent subagents, not propose alternatives",
+        "No Champions are assigned (evaluation mode)",
+        "Synthesis includes strengths, risks, and improvement recommendations",
+        "Output in pt-BR"
+      ],
+      "assertions": [
+        "Intent classified as Analyze",
+        "Auto-detected context used from extract-context.sh",
+        "Advisors evaluate existing project independently",
+        "No Champions assigned (evaluation mode)",
+        "Synthesis includes strengths, risks, and improvements",
+        "Output in pt-BR"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 22,
+      "prompt": "/tab \"quero criar um SaaS de gestão de tarefas para pequenas empresas\"",
+      "expected_output": "Intent detected as Create. Pre-fills context with 'SaaS de gestão de tarefas para pequenas empresas', proceeds with standard TAB flow asking remaining context questions",
+      "files": [],
+      "expectations": [
+        "Intent is classified as Create",
+        "The description is used as initial context, skipping 'what is being built' question",
+        "Context extraction asks remaining questions (team, budget, timeline, etc.)",
+        "Standard TAB flow proceeds with Champions and Advisors",
+        "Output in pt-BR"
+      ],
+      "assertions": [
+        "Intent classified as Create",
+        "Description pre-fills context, skips 'what is being built'",
+        "Remaining context questions asked (team, budget, timeline)",
+        "Standard TAB flow with Champions and Advisors",
+        "Output in pt-BR"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 23,
+      "prompt": "/tab \"vamos melhorar a arquitetura desse projeto, tá ficando difícil de manter\"",
+      "expected_output": "Intent detected as Improve. Auto-detects current stack, Champions propose improvement strategies (not alternative stacks), Advisors evaluate strategies",
+      "files": [],
+      "expectations": [
+        "Intent is classified as Improve",
+        "Current stack is auto-detected and analyzed",
+        "Champions propose improvement strategies (e.g., refactoring, patterns, architecture changes)",
+        "Champions do NOT propose replacing the entire stack",
+        "Advisors evaluate each improvement strategy",
+        "Synthesis includes current issues + recommended changes + priority order"
+      ],
+      "assertions": [
+        "Intent classified as Improve",
+        "Current stack auto-detected and analyzed",
+        "Champions propose improvement strategies (refactoring, patterns, architecture)",
+        "Champions do NOT propose full stack replacement",
+        "Advisors evaluate each improvement strategy",
+        "Synthesis: current issues + changes + priority order"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 24,
+      "prompt": "/tab \"./src/api\"",
+      "expected_output": "Intent detected as Analyze (path provided). Reads the ./src/api folder structure and key files, Advisors evaluate the API architecture",
+      "files": [],
+      "expectations": [
+        "Intent is classified as Analyze (path detection)",
+        "extract-context.sh is run targeting ./src/api",
+        "Key files in the folder are read for context",
+        "Advisors evaluate the API code/architecture",
+        "Synthesis includes specific findings about the code"
+      ],
+      "assertions": [
+        "Intent classified as Analyze via path detection",
+        "extract-context.sh targets ./src/api",
+        "Key files in folder read for context",
+        "Advisors evaluate API code/architecture",
+        "Synthesis includes specific code findings"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 25,
+      "prompt": "/tab \"quero evoluir esse MVP pra produção, já tenho 50 clientes usando\"",
+      "expected_output": "Intent detected as Continue/Evolve. Auto-detects current stack, classifies as MVP→Full transition, Champions propose evolution paths",
+      "files": [],
+      "expectations": [
+        "Intent is classified as Continue/Evolve",
+        "Current stage classified as MVP with 50 active customers",
+        "Champions propose evolution paths to production-readiness",
+        "Focus on scaling, reliability, monitoring, security hardening",
+        "Synthesis includes evolution roadmap with priorities",
+        "Output in pt-BR"
+      ],
+      "assertions": [
+        "Intent classified as Continue/Evolve",
+        "Stage classified as MVP with 50 active customers",
+        "Champions propose evolution paths to production",
+        "Focus on scaling, reliability, monitoring, security",
+        "Evolution roadmap with priorities in synthesis",
+        "Output in pt-BR"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 26,
+      "prompt": "/tab \"vamos iniciar um projeto de CLI tool em Rust para processar logs\"",
+      "expected_output": "Intent detected as Create. Pre-fills context with Rust CLI for log processing, asks targeted follow-up questions",
+      "files": [],
+      "expectations": [
+        "Intent is classified as Create",
+        "Rust is noted as a pre-selected language preference",
+        "Context extraction focuses on: log formats, scale, team experience, distribution",
+        "Champions propose different Rust toolchain combinations (clap+tokio vs alternatives)",
+        "Output in pt-BR"
+      ],
+      "assertions": [
+        "Intent classified as Create",
+        "Rust noted as pre-selected language",
+        "Context extraction focuses on log formats, scale, experience, distribution",
+        "Champions propose Rust toolchain combinations (clap+tokio vs alternatives)",
+        "Output in pt-BR"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 27,
+      "prompt": "What's the best way to structure my React components?",
+      "should_trigger": false,
+      "reason": "Near-miss: contains 'best way' keyword but is about code organization, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 28,
+      "prompt": "How does Next.js server-side rendering work?",
+      "should_trigger": false,
+      "reason": "Near-miss: mentions a framework but is an explanation request, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 29,
+      "prompt": "Compare the performance of these two functions",
+      "should_trigger": false,
+      "reason": "Near-miss: contains 'compare' keyword but is a code-level performance comparison, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 30,
+      "prompt": "Should I use async/await or callbacks here?",
+      "should_trigger": false,
+      "reason": "Near-miss: contains 'should I use' pattern but is about code patterns, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 31,
+      "prompt": "What do you think about this algorithm implementation?",
+      "should_trigger": false,
+      "reason": "Near-miss: contains 'what do you think' trigger but is a code review request, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 32,
+      "prompt": "Help me plan the migration of this data from CSV to the database",
+      "should_trigger": false,
+      "reason": "Near-miss: contains 'plan' and 'migration' keywords but is about data implementation, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 33,
+      "prompt": "Is this a good approach for handling errors in my API?",
+      "should_trigger": false,
+      "reason": "Near-miss: contains 'is this good' pattern but is a code review request, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 34,
+      "prompt": "Analyze the complexity of this sorting function",
+      "should_trigger": false,
+      "reason": "Near-miss: contains 'analyze' trigger but is about algorithmic analysis, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 35,
+      "prompt": "/tab \"analise esse projeto e me diga o que melhorar\"",
+      "expected_output": "Analyze mode — reads fixture files, detects Express + Prisma + TypeScript stack, advisors evaluate architecture and security. Identifies hardcoded JWT secret, missing input validation, no pagination, no auth on delete endpoint.",
+      "files": [
+        "evals/fixtures/simple-node-api/"
+      ],
+      "expectations": [
+        "Intent classified as Analyze",
+        "Stack detected: Express + Prisma + TypeScript",
+        "Security issue identified: hardcoded JWT secret in users.ts",
+        "Missing input validation on POST /products identified",
+        "No auth check on DELETE /products/:id identified",
+        "No pagination on GET /users identified",
+        "Advisors evaluate from independent dimensions"
+      ],
+      "assertions": [
+        "Intent classified as Analyze",
+        "Stack detected: Express + Prisma + TypeScript",
+        "Hardcoded JWT secret flagged as security issue",
+        "Missing input validation flagged",
+        "Missing auth on delete endpoint flagged",
+        "Missing pagination flagged",
+        "Independent advisor evaluations produced"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 36,
+      "prompt": "/tab \"quero evoluir essa CLI tool, adicionar suporte a múltiplos backends e plugins\"",
+      "expected_output": "Continue/Evolve mode — detects Python CLI with Click + httpx + Rich, proposes evolution paths for plugin architecture.",
+      "files": [
+        "evals/fixtures/python-cli/"
+      ],
+      "expectations": [
+        "Intent classified as Continue/Evolve",
+        "Stack detected: Python with Click, httpx, Rich",
+        "Champions propose plugin architecture strategies",
+        "Multiple backend support is central to proposals",
+        "Evolution path from current single-backend to extensible system",
+        "Output in pt-BR"
+      ],
+      "assertions": [
+        "Intent classified as Continue/Evolve",
+        "Stack detected: Python with Click, httpx, Rich",
+        "Plugin architecture strategies proposed by champions",
+        "Multiple backend support addressed",
+        "Evolution path from single-backend to extensible",
+        "Output in pt-BR"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 37,
+      "prompt": "/tab \"analise esse projeto, tá uma bagunça e preciso saber por onde começar a arrumar\"",
+      "expected_output": "Analyze/Improve mode — detects messy Node.js project with outdated deps, SQL injection, hardcoded credentials, mixed databases, deprecated packages. Prioritized improvement recommendations.",
+      "files": [
+        "evals/fixtures/messy-project/"
+      ],
+      "expectations": [
+        "Intent classified as Analyze or Improve",
+        "SQL injection vulnerability in /users endpoint identified",
+        "Hardcoded database credentials flagged",
+        "Deprecated packages identified (request, moment)",
+        "Mixed database usage (MySQL + MongoDB) questioned",
+        "Security vulnerabilities prioritized over code quality issues",
+        "Improvement roadmap with priority order provided"
+      ],
+      "assertions": [
+        "SQL injection in /users endpoint identified",
+        "Hardcoded database credentials flagged",
+        "Deprecated packages (request, moment) identified",
+        "Mixed MySQL + MongoDB usage questioned",
+        "Security issues prioritized over code quality",
+        "Improvement roadmap with priorities provided"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 38,
+      "prompt": "/tab \"quero migrar esse projeto para algo mais moderno e seguro\"",
+      "expected_output": "Improve mode — detects messy project, Champions propose modernization strategies (not just 'use React'). Focus on security fixes, dependency updates, architecture cleanup.",
+      "files": [
+        "evals/fixtures/messy-project/"
+      ],
+      "expectations": [
+        "Intent classified as Improve",
+        "Current stack auto-detected (Express, mongoose, mysql, ejs)",
+        "Champions propose improvement strategies, not full rewrites",
+        "Security fixes (SQL injection, credentials) are top priority",
+        "Dependency modernization path (request->fetch/axios, moment->date-fns/dayjs)",
+        "Database consolidation strategy proposed",
+        "Output in pt-BR"
+      ],
+      "assertions": [
+        "Intent classified as Improve",
+        "Current stack detected: Express, mongoose, mysql, ejs",
+        "Champions propose improvements, not full rewrites",
+        "Security fixes prioritized (SQL injection, credentials)",
+        "Dependency modernization path proposed",
+        "Database consolidation strategy addressed",
+        "Output in pt-BR"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 39,
+      "should_trigger": true,
+      "prompt": "Compare FastAPI vs Django for a REST API with background tasks",
+      "note": "Test with degraded MCP — verify research fallback protocol activates gracefully",
+      "expected_output": "TAB flow proceeds even if MCP tools fail. Claims are marked with uncertainty flags. Session does not halt.",
+      "files": [],
+      "expectations": [
+        "Research fallback protocol activated when MCP tools are unavailable",
+        "Claims marked with [not verified] or [model knowledge] when research fails",
+        "Session proceeds to completion without halting",
+        "At least 2 champions present proposals",
+        "Synthesis produced despite degraded research"
+      ],
+      "assertions": [
+        "Research fallback protocol activated",
+        "Unverified claims flagged appropriately",
+        "Session completes without halting",
+        "At least 2 champion proposals",
+        "Synthesis produced despite degraded research"
+      ]
+    },
+    {
+      "id": 40,
+      "should_trigger": true,
+      "prompt": "/tab \"what database should I use for 1M daily events with time-range queries?\"",
+      "note": "English input — verify language detection produces English output throughout",
+      "expected_output": "Full TAB flow in English. Language detection identifies English from first message. All output in English except technical terms which are already English.",
+      "files": [],
+      "expectations": [
+        "Output entirely in English",
+        "Language detection correctly identifies English",
+        "Standard TAB flow proceeds (research, champions, advisors, synthesis)",
+        "Time-series database alternatives compared",
+        "Throughput of 1M daily events addressed"
+      ],
+      "assertions": [
+        "Output in English",
+        "Language detection correct",
+        "Standard TAB flow proceeds",
+        "Time-series database alternatives compared",
+        "1M daily events throughput addressed"
+      ]
+    },
+    {
+      "id": 41,
+      "should_trigger": true,
+      "prompt": "Preciso escolher um message broker para comunicação entre microsserviços. Time de 4 devs, experiência com Node.js e Python. Esperamos 50K mensagens por minuto no pico.",
+      "note": "Word budget compliance test — verify champion, advisor, and synthesis outputs respect documented word limits",
+      "expected_output": "Standard mode. Champion outputs ~600 words each, Advisor outputs ~400 words each, Synthesis ~1200 words. No phase exceeds documented maximum.",
+      "files": [],
+      "expectations": [
+        "Champion presentations do not exceed ~900 words each",
+        "Advisor evaluations do not exceed ~550 words each",
+        "Synthesis output is proportional to Standard mode (~1200 words)",
+        "At least 3 champions (RabbitMQ, Kafka, NATS or similar)",
+        "Message throughput of 50K/min addressed in benchmarks"
+      ],
+      "assertions": [
+        "Champion presentations within word budget (~600-900 words)",
+        "Advisor evaluations within word budget (~400-550 words)",
+        "Synthesis proportional to Standard mode",
+        "At least 3 champions for message brokers",
+        "50K messages/min throughput addressed"
+      ]
+    },
+    {
+      "id": 42,
+      "should_trigger": true,
+      "prompt": "Comparar bancos de dados para uma aplicação de saúde digital. Armazenamos prontuários médicos e precisamos estar em conformidade com HIPAA e LGPD. Time de 4 devs. Esperamos 10k consultas por dia.",
+      "note": "T1 trigger — critical compliance dimension (HIPAA/LGPD) must be detected post-baseline research, forcing directed re-research and logging a budget_adjustments entry with reason 'T1'.",
+      "expected_output": "Standard/Complete mode. Baseline research focuses on throughput/versioning. Moderator detects HIPAA/LGPD was not covered, fires T1 trigger (+3 queries), launches directed researcher for encryption-at-rest, audit logs, BAA support. telemetry.json.budget_adjustments[] contains one T1 entry.",
+      "files": [],
+      "expectations": [
+        "HIPAA and LGPD compliance dimensions explicitly evaluated per champion",
+        "Moderator acknowledges the dimension gap and announces a budget expansion",
+        "telemetry.json.budget_adjustments[] includes an entry with reason 'T1' (or label 'critical-dimension')",
+        "Champions address encryption-at-rest, audit logging, and vendor BAA status",
+        "Output in pt-BR"
+      ],
+      "assertions": [
+        "HIPAA+LGPD compliance evaluated per champion",
+        "Moderator announces budget expansion for dimension gap",
+        "budget_adjustments[] logs T1 entry",
+        "Encryption-at-rest and audit logging addressed",
+        "Output in pt-BR"
+      ]
+    },
+    {
+      "id": 43,
+      "should_trigger": true,
+      "prompt": "Quero usar Bun como runtime do backend. Time de 3 devs senior em Node. Projeto é um SaaS MVP com 5k usuários esperados no primeiro ano.",
+      "note": "Vanguard timeline — assessment of Bun should query tab-vanguard-timeline; if cached within 90 days, synthesis reuses the assessment with [timeline-cached, N days] flag.",
+      "expected_output": "Standard mode. Champions include Bun as Vanguard. Moderator queries the Vanguard timeline. If cached assessment exists and is <90 days old, Vanguard's readiness_assessment reuses that data with [timeline-cached] annotation. If not cached, fresh assessment is performed and appended to the ledger.",
+      "files": [],
+      "expectations": [
+        "Bun is classified as the Vanguard in the champion lineup",
+        "Vanguard's readiness_assessment is populated (verdict, maturity_estimate_months, blockers)",
+        "If the timeline ledger has a recent entry for Bun, the assessment carries a [timeline-cached] marker with age in days",
+        "If fresh, the assessment is written back via tab-vanguard-timeline append",
+        "Team's Node experience is factored into the adoption path"
+      ],
+      "assertions": [
+        "Bun is the Vanguard",
+        "readiness_assessment fields populated",
+        "timeline-cached marker present if ledger hit, else fresh entry appended",
+        "Node-to-Bun adoption path discussed"
+      ]
+    },
+    {
+      "id": 44,
+      "should_trigger": true,
+      "prompt": "Compare bancos vetoriais para RAG: Pinecone vs Weaviate vs Qdrant vs pgvector. Time de 2 devs. Escala inicial de 500k documentos.",
+      "note": "T3 trigger — with MCP in degraded mode (no perplexity/context7), unverified-claim ratio is likely to exceed 30%, which should fire a T3 expansion (+2) and be logged.",
+      "expected_output": "Standard mode with degraded MCP. Many claims carry [low-conf]/[unverified] tags. At end of research phase, Moderator detects unverified_ratio > 0.30 and fires T3. budget_adjustments[] contains T3 entry; next phase operates with expanded budget.",
+      "files": [],
+      "expectations": [
+        "At least 4 champions (one per vector DB)",
+        "Claims are tagged with confidence levels, with a visible share of [low-conf] or [unverified]",
+        "If unverified_ratio exceeds 30% at end of any phase, telemetry.json.budget_adjustments[] logs a T3 entry",
+        "The synthesis unverified_claims[] array is populated with expected_source for each item",
+        "500k document scale is addressed in benchmarks"
+      ],
+      "assertions": [
+        "4 champions for vector DBs",
+        "Confidence tags applied to numeric claims",
+        "T3 budget_adjustment logged when unverified ratio exceeds 30%",
+        "unverified_claims[] populated with expected_source",
+        "500k document scale addressed"
+      ]
+    },
+    {
+      "id": 45,
+      "should_trigger": true,
+      "prompt": "/tech-advisory-board:rechallenge TAB/decisions/0001-postgres-timescaledb.md",
+      "note": "Rechallenge verdict 'still-valid' — original ADR is 4 months old, Postgres+TimescaleDB still outperforms alternatives, no material changes. Skill appends a Rechallenge Log entry but does NOT generate a new ADR.",
+      "expected_output": "Rechallenge session runs compressed flow (delta research → auditor → 3 advisors). Verdict derivation yields still-valid: zero material changes, no critical auditor findings, advisors averaged >=7 on keep-primary. Original ADR is patched with a Rechallenge Log section dated today; status remains 'accepted'; index.md Status column gains '(reviewed YYYY-MM-DD)' suffix. A minimal synthesis.json is written to the rechallenge session dir.",
+      "files": [],
+      "expectations": [
+        "Compressed flow executes: delta research, auditor, 3 advisors (Maintenance, Evolution, Cost)",
+        "Verdict is 'still-valid' given no material changes",
+        "Original ADR gains a Rechallenge Log section (section is created if absent, appended if present)",
+        "Original ADR status line is NOT changed",
+        "No new ADR is generated in TAB/decisions/",
+        "TAB/index.md Status for the ADR reflects the reviewed-date suffix",
+        "A minimal synthesis.json is emitted under the rechallenge session dir"
+      ],
+      "assertions": [
+        "Compressed flow: delta research, auditor, 3 advisors",
+        "Verdict still-valid",
+        "Rechallenge Log section appended to original ADR",
+        "Original status unchanged",
+        "No new ADR generated",
+        "Index status shows reviewed-date suffix",
+        "Minimal synthesis.json emitted"
+      ]
+    },
+    {
+      "id": 46,
+      "should_trigger": true,
+      "prompt": "/tech-advisory-board:rechallenge TAB/decisions/0002-monolith-rails-api.md",
+      "note": "Rechallenge verdict 'needs-revision' — original decision still wins on weighted score but delta research surfaced changes (new CVE on the primary, vendor pricing shift). Risks and migration path must be updated without changing status.",
+      "expected_output": "Rechallenge session runs compressed flow. Verdict is needs-revision: material changes exist but keep-primary still wins on weighted score. Original ADR gains a 'Revision Notes' section with updated risks/mitigations/pivot triggers. Status remains 'accepted'. TAB/index.md shows 'accepted (revised YYYY-MM-DD)' annotation. No new ADR is generated.",
+      "files": [],
+      "expectations": [
+        "Verdict is 'needs-revision' given material changes but primary still wins",
+        "Original ADR gains a Revision Notes section (dated)",
+        "Original ADR status stays 'accepted'",
+        "No new ADR is generated",
+        "TAB/index.md shows 'accepted (revised YYYY-MM-DD)' or equivalent annotation",
+        "Updated risks/mitigations/pivot triggers are captured either in the ADR revision notes or in the rechallenge session's rechallenge-verdict.md",
+        "tab-supersede-adr is invoked with --mode revision"
+      ],
+      "assertions": [
+        "Verdict needs-revision",
+        "Revision Notes section appended",
+        "Status remains accepted",
+        "No new ADR generated",
+        "Index shows revised annotation",
+        "Risks/mitigations updated in revision notes or verdict doc",
+        "tab-supersede-adr invoked with --mode revision"
+      ]
+    },
+    {
+      "id": 47,
+      "should_trigger": true,
+      "prompt": "/tech-advisory-board:rechallenge TAB/decisions/0003-react-frontend.md",
+      "note": "Rechallenge verdict 'supersede' — an alternative from the original shortlist (SolidJS) has materially matured in the 12 months since the ADR. Advisors agree switch-to-top-alternative now scores >= keep-primary + 1. A new ADR is generated and the old one marked superseded.",
+      "expected_output": "Rechallenge session runs compressed flow. Auditor surfaces a critical finding about maintainer churn on the primary. Advisors converge on switch-to-alternative (SolidJS). Verdict: supersede. A new synthesis.json is composed recommending SolidJS, tab-new-adr writes ADR 0004, tab-supersede-adr marks 0003 as 'superseded-by: 0004'. Both ADRs visible in index.md with correct statuses.",
+      "files": [],
+      "expectations": [
+        "Verdict is 'supersede' given alternative now outscores primary or critical auditor finding",
+        "New synthesis.json is written with session.mode = 'Rechallenge' and consumable_hints.supersedes_adr set",
+        "tab-new-adr generates a new NNNN-slug.md in TAB/decisions/",
+        "tab-supersede-adr rewrites old ADR's status line to 'superseded-by: NNNN (YYYY-MM-DD)'",
+        "Old ADR gains a 'Superseded By' section linking to the new ADR",
+        "TAB/index.md shows both rows with correct statuses",
+        "New ADR's rationale cites the specific delta findings that justified the switch"
+      ],
+      "assertions": [
+        "Verdict supersede",
+        "New synthesis.json with Rechallenge mode and supersedes_adr hint",
+        "New ADR generated via tab-new-adr",
+        "Old ADR status rewritten to superseded-by: NNNN",
+        "Superseded By section appended to old ADR",
+        "Index shows both ADRs with correct statuses",
+        "New rationale cites delta findings"
+      ]
+    },
+    {
+      "id": 48,
+      "should_trigger": false,
+      "prompt": "/tech-advisory-board:tab \"Monolith vs microservices for a 3-person team\"",
+      "note": "Regression test for the Stop-gate (validate-on-stop.sh). User interrupts the session before Phase 10 Synthesis completes — no synthesis.json has been produced yet. The Stop hook MUST exit silently (exit 0) and NOT block the stop, because there is nothing to validate. If the gate blocks a legitimate interruption, that is a regression.",
+      "expected_output": "Session starts normally, Moderator begins complexity classification and research phases. User interrupts before synthesis is written. validate-on-stop.sh detects no synthesis.json in the newest session directory and exits 0 silently. The session stops cleanly without a {\"decision\":\"block\"} payload. state.json remains resumable for a later /tech-advisory-board:tab invocation.",
+      "files": [],
+      "expectations": [
+        "No synthesis.json exists in TAB/sessions/<sid>/ when the user interrupts",
+        "scripts/validate-on-stop.sh exits 0 (not 2) and emits no JSON",
+        "The session stops without a block-reason feedback message",
+        "state.json and state-full.json persist the incomplete-session snapshot",
+        "detect-interrupted.sh on the next SessionStart surfaces the session as resumable"
+      ],
+      "assertions": [
+        "Stop hook does not block when synthesis.json is absent",
+        "Interrupted session persists resume-capable state",
+        "Next SessionStart detects the session as resumable within the 24h window"
+      ]
+    }
+  ]
+}

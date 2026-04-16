@@ -1,0 +1,127 @@
+# Example GitHub Actions workflow — run TAB headlessly against a PR body or
+# an issue title, validate the synthesis, and fail CI if the Stop-gate
+# rejects it.
+#
+# Prerequisites:
+#   - CLAUDE_CODE_OAUTH_TOKEN secret set in the repo / org.
+#   - Claude Code installed in the runner (see claude.com/docs).
+#   - MCPs configured via `claude mcp add` step before running TAB (optional;
+#     without MCPs, claims are flagged [unverified]).
+#
+# Usage:
+#   Place this file at .github/workflows/tab-review.yml and adjust the
+#   prompt source (PR body, issue title, input) to your workflow.
+
+name: TAB Review
+
+on:
+  workflow_dispatch:
+    inputs:
+      question:
+        description: "Technical decision question for the advisory board"
+        required: true
+        type: string
+  pull_request:
+    types: [opened, labeled]
+
+jobs:
+  deliberate:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'needs-tab-review')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Install TAB plugin
+        run: |
+          claude plugin marketplace add lucascouts/tech-advisory-board
+          claude plugin install tech-advisory-board@tech-advisory-board
+
+      - name: Configure MCPs (optional but recommended)
+        env:
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+          BRAVE_API_KEY: ${{ secrets.BRAVE_API_KEY }}
+        run: |
+          if [ -n "$PERPLEXITY_API_KEY" ]; then
+            claude mcp add perplexity --env PERPLEXITY_API_KEY="$PERPLEXITY_API_KEY" -- npx -y perplexity-mcp-server
+          fi
+          claude mcp add context7 -- npx -y @upstash/context7-mcp
+          if [ -n "$BRAVE_API_KEY" ]; then
+            claude mcp add brave-search --env BRAVE_API_KEY="$BRAVE_API_KEY" -- npx -y brave-search-mcp
+          fi
+          tab-check-mcps || echo "Running in degraded mode"
+
+      - name: Pick question
+        id: q
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "question=${{ inputs.question }}" >> "$GITHUB_OUTPUT"
+          else
+            # Use the PR title as the question; the PR body provides context.
+            echo "question=${{ github.event.pull_request.title }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run TAB (headless)
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+        run: |
+          claude -p "/tech-advisory-board:tab \"${{ steps.q.outputs.question }}\"" \
+            --output-format json \
+            --allowedTools "WebSearch,WebFetch,Read,Grep,Glob,Agent,TodoWrite" \
+            > tab-output.json
+
+      - name: Locate synthesis
+        id: synth
+        run: |
+          SYNTH=$(find TAB/sessions -name synthesis.json -not -path '*/archived/*' | sort | tail -1)
+          echo "path=$SYNTH" >> "$GITHUB_OUTPUT"
+
+      - name: Validate synthesis
+        run: |
+          "${CLAUDE_PLUGIN_ROOT:-$(claude plugin path tech-advisory-board)}/scripts/validate-synthesis-json.sh" \
+            "${{ steps.synth.outputs.path }}"
+
+      - name: Validate claims
+        run: |
+          SESSION=$(dirname "${{ steps.synth.outputs.path }}")
+          "${CLAUDE_PLUGIN_ROOT:-$(claude plugin path tech-advisory-board)}/scripts/validate-claims.sh" \
+            --session "$SESSION"
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tab-session
+          path: |
+            TAB/sessions/**/synthesis.json
+            TAB/sessions/**/report.md
+            TAB/sessions/**/state.json
+            TAB/sessions/**/telemetry.json
+            TAB/decisions/*.md
+            TAB/index.md
+
+      - name: Comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = '${{ steps.synth.outputs.path }}'.replace('synthesis.json', 'report.md');
+            if (!fs.existsSync(path)) return;
+            const body = fs.readFileSync(path, 'utf8');
+            github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: "## TAB Advisory Board Result\n\n" + body.slice(0, 60000)
+            });

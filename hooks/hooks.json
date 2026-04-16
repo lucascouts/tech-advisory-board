@@ -1,0 +1,93 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 5,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/detect-interrupted.sh"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 5,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/inject-tab-context.sh"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 3,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/flush-state.sh"
+          }
+        ]
+      }
+    ],
+    "PostCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 4,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/rehydrate-state.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "if": "Write(**/TAB/sessions/**)",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 3,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/update-telemetry.sh"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 3,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/update-telemetry-subagent.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 10,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/validate-on-stop.sh"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 10,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/archive-idle-sessions.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tech-advisory-board/telemetry.schema.json",
+  "title": "TAB Session Telemetry",
+  "description": "Cost and time tracking per session. Finalized in Block 2 (ARCHITECTURE.md §7.2).",
+  "type": "object",
+  "properties": {
+    "session_id": {"type": "string"},
+    "mode": {"type": "string"},
+    "started_at": {"type": "string", "format": "date-time"},
+    "ended_at": {"type": ["string", "null"], "format": "date-time"},
+    "total_duration_s": {"type": "number"},
+    "phases": {"type": "array"},
+    "totals": {"type": "object"},
+    "cost_rates_used": {"type": "object"},
+    "budget_adjustments": {"type": "array"},
+    "warnings_issued": {"type": "array"},
+    "budget_exceeded": {"type": "boolean"}
+  },
+  "required": ["session_id", "mode", "started_at"]
+}

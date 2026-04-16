@@ -1,0 +1,195 @@
+#!/usr/bin/env bash
+# tab-supersede-adr — link two ADRs: mark the old one as superseded by the new.
+#
+# Modes:
+#   --mode supersede (default): rewrites old ADR's status line to
+#       `superseded-by: NNNN`, appends a "Superseded By" section, and
+#       regenerates TAB/index.md.
+#   --mode revision: leaves old ADR's status intact but appends a
+#       "Revision Notes" section pointing to the rechallenge session;
+#       updates TAB/index.md with a "(revised YYYY-MM-DD)" annotation.
+#
+# Usage:
+#   tab-supersede-adr --old <old-ADR-path> --new <new-ADR-path>
+#                     [--mode supersede|revision]
+#                     [--session <rechallenge-session-dir>]
+#                     [--tab-dir DIR]
+#                     [--dry-run]
+#
+# Exit codes:
+#   0   link applied and index rewritten
+#   1   input invalid (file not found, already superseded)
+#   2   bad invocation
+set -uo pipefail
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    sed -n '2,19p' "$0" | sed 's/^# \?//'
+    exit 0
+fi
+
+OLD=""
+NEW=""
+MODE="supersede"
+SESSION=""
+TAB_DIR=""
+DRY_RUN=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --old)       OLD="$2"; shift ;;
+        --new)       NEW="$2"; shift ;;
+        --mode)      MODE="$2"; shift ;;
+        --session)   SESSION="$2"; shift ;;
+        --tab-dir)   TAB_DIR="$2"; shift ;;
+        --dry-run)   DRY_RUN=true ;;
+        *) echo "Unknown flag: $1" >&2; exit 2 ;;
+    esac
+    shift
+done
+
+[[ -n "$OLD" ]] || { echo "--old required" >&2; exit 2; }
+[[ -n "$NEW" ]] || { echo "--new required" >&2; exit 2; }
+[[ "$MODE" == "supersede" || "$MODE" == "revision" ]] || {
+    echo "--mode must be supersede|revision" >&2; exit 2; }
+[[ -f "$OLD" ]] || { echo "Old ADR not found: $OLD" >&2; exit 1; }
+# --new can point to a file that doesn't exist yet in revision mode (we
+# only link to the session); require it in supersede mode.
+if [[ "$MODE" == "supersede" && ! -f "$NEW" ]]; then
+    echo "New ADR not found: $NEW" >&2; exit 1
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "python3 required" >&2
+    exit 1
+fi
+
+# Resolve TAB_DIR from the old ADR path if not given
+if [[ -z "$TAB_DIR" ]]; then
+    TAB_DIR=$(python3 - "$OLD" <<'PYEOF'
+import os, sys
+p = os.path.abspath(sys.argv[1])
+while p and p != "/":
+    parent = os.path.dirname(p)
+    if os.path.basename(parent) == "TAB":
+        print(parent); break
+    p = parent
+PYEOF
+)
+fi
+[[ -n "$TAB_DIR" && -d "$TAB_DIR" ]] || {
+    echo "Could not resolve TAB/ dir (use --tab-dir)" >&2; exit 1; }
+
+python3 - "$OLD" "$NEW" "$MODE" "$SESSION" "$TAB_DIR" "$DRY_RUN" <<'PYEOF'
+import json, os, re, sys
+from datetime import datetime, timezone
+
+old_path, new_path, mode, session, tab_dir, dry_run = sys.argv[1:7]
+dry_run = dry_run == "true"
+
+with open(old_path) as f:
+    old_text = f.read()
+
+# --- Pre-flight: already superseded? ---
+if re.search(r"^-\s*\*\*Status:\*\*\s*superseded-by:", old_text, re.MULTILINE):
+    print(json.dumps({"error": "old ADR already superseded"}))
+    sys.exit(1)
+
+# --- Extract NNNN of new ADR (for supersede mode) ---
+new_nnnn = None
+if mode == "supersede":
+    m = re.match(r"^(\d{4})-", os.path.basename(new_path))
+    if not m:
+        print(json.dumps({"error": f"cannot derive NNNN from new ADR filename: {new_path}"}))
+        sys.exit(1)
+    new_nnnn = m.group(1)
+
+today = datetime.now(timezone.utc).date().isoformat()
+
+# --- Patch old ADR ---
+if mode == "supersede":
+    # Rewrite status line
+    def repl(m):
+        return f"- **Status:** superseded-by: {new_nnnn} ({today})"
+    new_text, n = re.subn(
+        r"^-\s*\*\*Status:\*\*\s*(proposed|accepted)[^\n]*",
+        repl, old_text, count=1, flags=re.MULTILINE)
+    if n == 0:
+        print(json.dumps({"error": "could not locate Status line in old ADR"}))
+        sys.exit(1)
+    # Append "Superseded By" section
+    rel_new = os.path.relpath(new_path, os.path.dirname(old_path))
+    suffix = (f"\n\n## Superseded By — {today}\n\n"
+              f"This decision has been superseded by "
+              f"[{os.path.basename(new_path)}]({rel_new}).\n")
+    if session:
+        rel_session = os.path.relpath(session, os.path.dirname(old_path))
+        suffix += f"\nRechallenge session: [{rel_session}]({rel_session}).\n"
+    new_text += suffix
+else:
+    # Revision mode: append Revision Notes section; status unchanged
+    new_text = old_text.rstrip() + f"\n\n## Revision Notes — {today}\n\n"
+    if session:
+        new_text += f"Rechallenge session: `{session}`\n\n"
+    new_text += ("The decision in this ADR was re-evaluated and remains "
+                 "authoritative, but material changes were observed. "
+                 "Specific amendments are captured in the rechallenge "
+                 "session's `rechallenge-verdict.md`. Risks and migration "
+                 "path should be read alongside that verdict.\n")
+
+# --- Write old ADR (unless dry-run) ---
+if not dry_run:
+    with open(old_path, "w") as f:
+        f.write(new_text)
+
+# --- Regenerate TAB/index.md by scanning all decisions ---
+decisions_dir = os.path.join(tab_dir, "decisions")
+index_path = os.path.join(tab_dir, "index.md")
+rows = []
+
+STATUS_RE = re.compile(r"^-\s*\*\*Status:\*\*\s*(.+?)\s*$", re.MULTILINE)
+DATE_RE = re.compile(r"^-\s*\*\*Date:\*\*\s*(\S+)", re.MULTILINE)
+TITLE_RE = re.compile(r"^#\s*\d{4}\.\s*(.+?)\s*$", re.MULTILINE)
+SESSION_RE = re.compile(r"^-\s*\*\*Session:\*\*\s*`([^`]+)`", re.MULTILINE)
+
+for name in sorted(os.listdir(decisions_dir)):
+    if not re.match(r"^\d{4}-.*\.md$", name):
+        continue
+    path = os.path.join(decisions_dir, name)
+    with open(path) as f:
+        content = f.read()
+    nnnn = name[:4]
+    status_m = STATUS_RE.search(content)
+    date_m = DATE_RE.search(content)
+    title_m = TITLE_RE.search(content)
+    session_m = SESSION_RE.search(content)
+    status = status_m.group(1) if status_m else "unknown"
+    date_s = date_m.group(1) if date_m else ""
+    title = title_m.group(1) if title_m else name
+    sess = session_m.group(1) if session_m else ""
+    rows.append(f"| {nnnn} | [{title[:80]}](decisions/{name}) | "
+                f"{status} | {date_s} | `{sess}` |")
+
+index_lines = [
+    "# Decisions Index",
+    "",
+    ("Generated and maintained by the TAB plugin. Entries are appended as "
+     "each ADR is produced; statuses are updated when decisions are superseded."),
+    "",
+    "| # | Title | Status | Date | Session |",
+    "|---|---|---|---|---|",
+] + rows + [""]
+
+if not dry_run:
+    with open(index_path, "w") as f:
+        f.write("\n".join(index_lines))
+
+print(json.dumps({
+    "mode": mode,
+    "old_adr": os.path.abspath(old_path),
+    "new_adr": os.path.abspath(new_path) if new_path else None,
+    "index_path": os.path.abspath(index_path),
+    "dry_run": dry_run,
+    "old_adr_new_status": f"superseded-by: {new_nnnn} ({today})" if mode == "supersede" else "unchanged",
+    "rows_in_index": len(rows),
+}, indent=2))
+PYEOF

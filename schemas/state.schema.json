@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tech-advisory-board/state.schema.json",
+  "title": "TAB Session Hot State",
+  "description": "Hot state for resume-detection. Finalized in Block 2 (ARCHITECTURE.md §7.1).",
+  "type": "object",
+  "properties": {
+    "session_id": {"type": "string"},
+    "plugin_version": {"type": "string"},
+    "created_at": {"type": "string", "format": "date-time"},
+    "last_updated": {"type": "string", "format": "date-time"},
+    "phase_completed": {"type": "string"},
+    "next_phase": {"type": "string"},
+    "mode": {"type": "string"},
+    "complexity": {"type": "string"},
+    "language": {"type": "string"},
+    "question": {"type": "string"},
+    "config_snapshot": {"type": "object"},
+    "shortlist": {"type": "array"},
+    "champions_assigned": {"type": "array"},
+    "budget_consumed": {"type": "object"},
+    "full_state_ref": {"type": "string"}
+  },
+  "required": ["session_id", "plugin_version", "created_at", "last_updated", "phase_completed", "next_phase"]
+}

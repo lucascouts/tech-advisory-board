@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tech-advisory-board/research-cache.schema.json",
+  "title": "TAB Research Cache",
+  "description": "Keyed by sha256(normalized_query + tool + date_window). Finalized in Block 2 (ARCHITECTURE.md §7.3).",
+  "type": "object",
+  "properties": {
+    "cache_version": {"type": "integer", "const": 1},
+    "entries": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "query_raw": {"type": "string"},
+          "query_normalized": {"type": "string"},
+          "tool": {"type": "string"},
+          "fetched_at": {"type": "string", "format": "date-time"},
+          "response_summary": {"type": "string"},
+          "sources": {"type": "array"},
+          "confidence": {"enum": ["high-conf", "med-conf", "low-conf", "unverified"]}
+        },
+        "required": ["query_normalized", "tool", "fetched_at"]
+      }
+    }
+  },
+  "required": ["cache_version", "entries"]
+}
