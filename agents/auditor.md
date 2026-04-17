@@ -5,8 +5,8 @@ description: >
   Complete, Complete+, and Rechallenge modes. Surfaces hidden
   assumptions, silent risks, feasibility gaps, discard-fairness
   violations, and factual errors in high-stakes claims.
-model: opus
-effort: max
+model: claude-opus-4-7
+effort: xhigh
 maxTurns: 15
 memory: project
 tools:
@@ -131,3 +131,21 @@ is a protocol violation.
 
 ~600 words of narrative before the JSON block (one paragraph per
 dimension). Do not exceed 900 words.
+
+## MCP result persistence
+
+Audit-phase verification is the highest-stakes research in the session —
+Auditor findings can override the Moderator's recommendation. For every
+`mcp__perplexity__perplexity_research`, `mcp__perplexity__perplexity_reason`,
+`mcp__plugin_context7_context7__query-docs`, or `mcp__brave-search__brave_web_search`
+call, attach:
+
+```json
+{
+  "_meta": { "anthropic/maxResultSizeChars": 500000 }
+}
+```
+
+This ensures that the full verification record (not a truncated excerpt)
+survives compaction and can be cited verbatim in the `evidence[].source`
+fields of your JSON output.

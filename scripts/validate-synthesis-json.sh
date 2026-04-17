@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
 # validate-synthesis-json.sh — structural validation of a synthesis.json file
-# against the hard-fail assertions in ARCHITECTURE.md §9.1.
-#
+# against the hard-fail assertions in .
 # Uses Python stdlib only (no jsonschema dependency). If `jsonschema` is
 # installed it runs an additional full-schema pass; otherwise only the
 # hard-fail assertions are checked.
-#
 # Usage:
 #   validate-synthesis-json.sh <path-to-synthesis.json>
 #   validate-synthesis-json.sh --schema <schema-path> <path>
-#
 # Exit codes:
 #   0   valid
 #   1   hard-fail assertion violated
@@ -70,7 +67,7 @@ def warn(cond, msg):
     if not cond:
         warnings.append(msg)
 
-# --- Hard-fail assertions (ARCHITECTURE.md §9.1) ---
+# --- Hard-fail assertions ---
 
 # All required top-level fields present
 for field in ("tab_version", "schema_version", "session", "context",

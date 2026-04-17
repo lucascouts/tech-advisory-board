@@ -1,19 +1,14 @@
 #!/usr/bin/env bash
 # tab-vanguard-timeline — read/update the cross-project Vanguard maturity ledger.
-#
 # Storage: ${CLAUDE_PLUGIN_DATA}/vanguard-timeline.json
 # Schema:  schemas/vanguard-timeline.schema.json
-# Spec:    ARCHITECTURE.md §7.6
-#
 # Subcommands:
 #   tab-vanguard-timeline get <technology>
 #       → {"technology": "...", "found": bool, "last_assessment": {...}|null,
 #          "from_cache": bool, "age_days": N|null}
 #       "from_cache: true" when the last assessment is within 90 days.
-#
 #   tab-vanguard-timeline list
 #       → array of {name, last_assessed, verdict, assessment_count}
-#
 #   tab-vanguard-timeline append <technology> --date YYYY-MM-DD
 #                                            --session-ref <ref>
 #                                            --verdict production-ready|near-ready|experimental
@@ -21,7 +16,6 @@
 #                                            [--blockers "a,b,c"]
 #                                            [--triggers "t1,t2"]
 #       → appends an assessment; creates the technology entry if new.
-#
 # Env:
 #   CLAUDE_PLUGIN_DATA — overrides storage location
 #                         (default: ~/.claude/plugins/data/tech-advisory-board/)

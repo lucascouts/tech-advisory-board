@@ -1,7 +1,7 @@
 ---
 version: 1.0
 last_updated: 2026-04-16
-scope: Block 4 — adversarial layers (ARCHITECTURE.md §12, §14)
+scope: Block 4 — adversarial layers
 audience: TAB Moderator
 ---
 
@@ -221,4 +221,3 @@ without explicit justification in `config.adversarial.auditor_override_reason`.
 - `agents/supervisor.md` — supervisor agent definition + output schema
 - `agents/auditor.md` — auditor agent definition + output schema
 - `references/debate-protocol.md` — §2.2 cross-exam + concession monitor
-- `ARCHITECTURE.md` §12 — full adversarial layer specification

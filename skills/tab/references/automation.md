@@ -1,7 +1,7 @@
 ---
 version: 1.0
 last_updated: 2026-04-16
-scope: Block 6 — headless + Agent SDK integration (ARCHITECTURE.md §18)
+scope: Block 6 — headless + Agent SDK integration
 audience: CI/CD engineers, automation builders, external tool authors
 ---
 
@@ -45,7 +45,7 @@ TAB's required host capabilities:
 - `Bash(${CLAUDE_PLUGIN_ROOT}/scripts/*)`, `Bash(${CLAUDE_PLUGIN_ROOT}/bin/*)` — plugin scripts
 - `Bash(git *)` — git introspection in `extract-context.sh`
 
-### 1.2 Headless invariants (ARCHITECTURE.md §18.4)
+### 1.2 Headless invariants
 
 When running via `-p`:
 
@@ -209,6 +209,111 @@ Full consumer checklist: `skills/tab/references/synthesis-schema.md` §5.
 | `CLAUDE_PLUGIN_OPTION_language_preference` | Personal language override (userConfig) |
 | `TAB_VANGUARD_WINDOW_DAYS` | Days within which a cached Vanguard assessment is reused (default 90) |
 | `TAB_RATE_OPUS_IN` / `TAB_RATE_OPUS_OUT` / etc. | Override `tab-compute-cost` per-Mtok rates |
+| `ENABLE_PROMPT_CACHING_1H=1` | Enables 1h extended prompt cache (Claude Code ≥ v2.1.108). **Strongly recommended for CI** — see §7.1 |
+
+### 7.1 Extended prompt cache (1h)
+
+Set `ENABLE_PROMPT_CACHING_1H=1` in the environment of every `claude -p`
+invocation that runs TAB in Complete or Complete+ modes. The Moderator's
+system prompt is re-used across every subagent dispatch (Champion, Advisor,
+Auditor, Supervisor) within a single session. With the 5-minute default TTL,
+cache hits lapse between phases; with the 1h TTL the cache stays warm across
+the whole deliberation, typically reclaiming >60% of input tokens.
+
+In practice this compensates for the Opus 4.7 pin on Champion / Auditor (cf.
+`agents/*.md`) — baseline Complete+ cost stays around the pre-upgrade median.
+
+Recipe (GitHub Actions snippet):
+
+```yaml
+- name: Run TAB
+  env:
+    CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+    ENABLE_PROMPT_CACHING_1H: "1"
+  run: claude -p "..." --output-format json
+```
+
+Local invocations opt-in per shell:
+
+```bash
+export ENABLE_PROMPT_CACHING_1H=1
+claude -p '/tech-advisory-board:tab "…"'
+```
+
+No-op on hosts older than v2.1.108 — variable is silently ignored.
+
+## 7.2 Auto-approve MADR mutations in CI via `PreToolUse: "defer"`
+
+Instead of running `claude -p` with `--dangerously-skip-permissions` (a
+blanket bypass), use a scoped `PreToolUse` hook that returns
+`{"decision":"defer"}` **only** for the two write paths TAB uses in CI:
+
+- `Bash(${CLAUDE_PLUGIN_ROOT}/bin/tab-new-adr ...)`
+- `Bash(${CLAUDE_PLUGIN_ROOT}/bin/tab-supersede-adr ...)`
+
+`"defer"` (Claude Code ≥ v2.1.89) means *"apply the configured permission
+mode as if the user had confirmed"* — different from `"allow"` in that the
+host-side audit log still records the tool invocation. Everything else
+(arbitrary `Bash`, `Edit`, `Write`) stays gated.
+
+Example GitHub Actions fragment:
+
+```yaml
+- name: Write CI permission policy
+  run: |
+    mkdir -p .claude
+    cat > .claude/settings.local.json <<'EOF'
+    {
+      "hooks": {
+        "PreToolUse": [
+          {
+            "if": "Bash(${CLAUDE_PLUGIN_ROOT}/bin/tab-new-adr *)",
+            "hooks": [{ "type": "inline", "decision": "defer" }]
+          },
+          {
+            "if": "Bash(${CLAUDE_PLUGIN_ROOT}/bin/tab-supersede-adr *)",
+            "hooks": [{ "type": "inline", "decision": "defer" }]
+          }
+        ]
+      }
+    }
+    EOF
+- name: Run TAB
+  env:
+    ENABLE_PROMPT_CACHING_1H: "1"
+  run: claude -p "/tech-advisory-board:tab \"...\"" --output-format json
+```
+
+Auditable, scoped, and reversible — never ship `--dangerously-skip-permissions`
+to a shared CI runner.
+
+## 7.3 Observing permission denials
+
+Claude Code ≥ v2.1.89 emits `PermissionDenied` when the auto-mode
+classifier blocks a tool call. TAB does not currently handle this hook,
+but a simple wrapper lets you record denials into `telemetry.json` so the
+operator can see which advisors hit tighter policies:
+
+```json
+{
+  "hooks": {
+    "PermissionDenied": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "jq -c '{at: now | todate, tool: .tool, subagent: .subagent_type}' >> TAB/sessions/latest/denials.ndjson"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Run this only when you are actively iterating on `PreToolUse` policy —
+in steady state, denials are rare and the file stays empty.
 
 ## 8. When NOT to run headless
 
@@ -228,7 +333,6 @@ for *first-time decisions*.
 
 ## 9. Related documents
 
-- `ARCHITECTURE.md` §18 — full specification
 - `skills/tab/references/synthesis-schema.md` — consumer contract
 - `skills/tab/references/hooks-catalog.md` — hook reference
 - `skills/rechallenge/references/rechallenge-protocol.md` — rechallenge in CI

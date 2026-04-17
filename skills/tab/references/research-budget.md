@@ -1,7 +1,7 @@
 ---
 version: 1.0
 last_updated: 2026-04-16
-scope: Block 5b — dynamic research budget (ARCHITECTURE.md §10)
+scope: Block 5b — dynamic research budget
 audience: TAB Moderator
 ---
 
@@ -177,7 +177,43 @@ producing high-confidence claims.
 
 ## 8. Related documents
 
-- `ARCHITECTURE.md` §10 — full specification
 - `references/persistence-protocol.md` — telemetry lifecycle
 - `references/confidence-tags.md` — unverified-ratio definitions
 - `references/adversarial-triggers.md` — auditor finding semantics
+
+## 9. MCP result persistence (`_meta`)
+
+Every MCP research call issued by a subagent (`perplexity_search`,
+`perplexity_research`, `perplexity_reason`, `context7 query-docs`,
+`brave_web_search`) must carry:
+
+```json
+{
+  "_meta": { "anthropic/maxResultSizeChars": 500000 }
+}
+```
+
+This is a Claude Code ≥ v2.1.91 feature. When the server honours the hint,
+the full response body (up to 500 000 chars) is persisted in the session
+transcript and **survives context compaction**. Downstream agents — Champion,
+Auditor, Supervisor — can cite the original result verbatim in
+`evidence[].source` without re-issuing a paid query.
+
+### Effect on budget accounting
+
+- The first call still consumes 1 query from the budget.
+- Subsequent **reads** of the same cached response (via transcript recall)
+  do **not** consume budget — they behave like a cache hit under §7.
+- If the agent explicitly re-queries to refresh the data, that is a new
+  consumption.
+
+### Fallback behaviour
+
+- Servers that ignore `_meta` truncate normally — plugin does not fail.
+- Add the `_meta` field unconditionally; it is a no-op when unsupported.
+
+### Audit
+
+`scripts/validate-claims.sh` does not enforce the `_meta` hint (the
+transcript cannot be inspected from a shell hook). Absence of `_meta` is a
+*performance* regression, not a correctness violation.

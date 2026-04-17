@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://tech-advisory-board/research-cache.schema.json",
   "title": "TAB Research Cache",
-  "description": "Keyed by sha256(normalized_query + tool + date_window). Finalized in Block 2 (ARCHITECTURE.md §7.3).",
+  "description": "Keyed by sha256(normalized_query + tool + date_window). Finalized in Block 2.",
   "type": "object",
   "properties": {
     "cache_version": {"type": "integer", "const": 1},

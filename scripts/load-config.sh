@@ -1,20 +1,15 @@
 #!/usr/bin/env bash
 # load-config.sh — load and merge TAB configuration.
-#
-# Precedence (ARCHITECTURE.md §8.3):
+# Precedence:
 #   userConfig env vars > TAB/config.json > hardcoded defaults
-#
 # Usage:
 #   load-config.sh [--base DIR] [--tab-dir DIR]
-#
 # Resolution of TAB/config.json:
 #   1. If --tab-dir is given, use <tab-dir>/config.json
 #   2. Else if --base is given, use <base>/TAB/config.json
 #   3. Else walk up from $PWD looking for a TAB/ directory; use its config.json
 #   4. Else no file — defaults only
-#
 # Output (JSON on stdout): merged config object matching schemas/config.schema.json
-#
 # userConfig env var mapping:
 #   CLAUDE_PLUGIN_OPTION_max_cost_per_session_usd → budget.max_cost_per_session_usd
 #   CLAUDE_PLUGIN_OPTION_warn_at_usd              → budget.warn_at_usd
@@ -65,7 +60,7 @@ import json, os, sys
 
 config_path = sys.argv[1]
 
-# --- Hardcoded defaults (ARCHITECTURE.md §8.1) ---
+# --- Hardcoded defaults ---
 defaults = {
     "project_name": None,
     "default_stage": "MVP",

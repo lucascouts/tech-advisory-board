@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://tech-advisory-board/synthesis.schema.json",
   "title": "TAB Synthesis",
-  "description": "Canonical structured output of a TAB session. Consumer contract documented in ARCHITECTURE.md §13 and skills/tab/references/synthesis-schema.md.",
+  "description": "Canonical structured output of a TAB session. Consumer contract documented in  and skills/tab/references/synthesis-schema.md.",
   "type": "object",
   "required": [
     "tab_version",

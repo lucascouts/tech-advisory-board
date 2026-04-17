@@ -1,7 +1,7 @@
 ---
 version: 1.0
 last_updated: 2026-04-16
-scope: Block 5c — Rechallenge mode (ARCHITECTURE.md §5, §14)
+scope: Block 5c — Rechallenge mode
 audience: Rechallenge Moderator
 ---
 
@@ -125,8 +125,8 @@ Each advisor scores THREE options on a 1-10 scale:
 - **No-action** — defer the decision (useful when all options are in
   flux)
 
-Advisors do NOT see each other's outputs (independence contract from
-ARCHITECTURE.md §3.4). Budget: 400 words each, hard cap 550.
+Advisors do NOT see each other's outputs (independence contract
+preserved). Budget: 400 words each, hard cap 550.
 
 ## 6. Verdict computation
 
@@ -235,8 +235,8 @@ When the verdict is `still-valid`:
 
 ## 11. Scheduling
 
-Rechallenge can be scheduled per ADR via `tab-schedule-rechallenge` (see
-ARCHITECTURE.md §17). The scheduled job invokes this skill non-interactively
+Rechallenge can be scheduled per ADR via `tab-schedule-rechallenge`.
+The scheduled job invokes this skill non-interactively
 with `--allowedTools` pre-declared. In scheduled mode:
 
 - User confirmation prompts (age warning, missing synthesis) are
@@ -256,4 +256,3 @@ with `--allowedTools` pre-declared. In scheduled mode:
   in rechallenge
 - `skills/tab/references/research-budget.md` — T5 expansion trigger
   for rechallenge
-- `ARCHITECTURE.md` §5, §7.5, §17 — full specification

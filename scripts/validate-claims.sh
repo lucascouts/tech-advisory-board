@@ -1,18 +1,13 @@
 #!/usr/bin/env bash
 # validate-claims.sh — data-quality validator for TAB session artifacts.
-#
 # Complements validate-synthesis-json.sh: that script checks *structure*,
 # this one checks *claim hygiene* — citation coverage, uniform elimination
 # criteria, confidence-tag completeness, discard-table asymmetries.
-#
-# Spec: ARCHITECTURE.md §9.2.
-#
 # Usage:
 #   validate-claims.sh <path-to-synthesis.json>
 #   validate-claims.sh --session <session-dir>    # reads synthesis.json
 #                                                  # and state-full.json from
 #                                                  # the session directory
-#
 # Exit codes:
 #   0   all hard-fail checks pass (warnings may be present)
 #   1   one or more hard-fail checks violated
@@ -175,7 +170,7 @@ if state_full is not None:
         unverified_ratio = unverified / total
         warn(unverified_ratio < 0.3,
              f"unverified-claim ratio is {unverified_ratio:.1%} "
-             f"({unverified}/{total}); ARCHITECTURE.md §10 triggers a "
+             f"({unverified}/{total});  triggers a "
              "+2 budget expansion above 30%")
 
 result = {

@@ -89,11 +89,42 @@ Create a new session directory named
 and research cache live there — NEVER mutate the original session's
 directory.
 
+### Isolation via worktree (Claude Code ≥ v2.1.72)
+
+When the host supports the `EnterWorktree` tool, the rechallenge **should**
+run inside an isolated git worktree:
+
+```json
+{
+  "tool_name": "EnterWorktree",
+  "input": { "path": "../.tab-rechallenge-<slug>" }
+}
+```
+
+Reasons:
+
+1. `tab-supersede-adr` and `tab-new-adr` write to `TAB/decisions/` via
+   Bash, which is invisible to `/rewind`. A worktree makes the whole
+   rechallenge a discardable branch.
+2. The original session's directory (`TAB/sessions/<original>/`) lives
+   in the same repo — a worktree guarantees structurally that no hook
+   can accidentally mutate it.
+3. On a clean `still-valid` or `needs-revision` verdict the Moderator
+   calls `ExitWorktree { mode: "merge" }` to bring the patched ADR + new
+   session dir back. On `supersede` the Moderator commits inside the
+   worktree first, then merges. On user abort the worktree is dropped
+   with `ExitWorktree { mode: "discard" }` — original state survives
+   untouched.
+
+Fallback: if `EnterWorktree` is unavailable (older host, non-git project)
+proceed in-place but warn the user and insist on a pre-flight
+`git add -A && git commit -m "pre-rechallenge snapshot"` as per §Gotchas.
+
 ## Mode
 
 Rechallenge is its own mode (not Standard/Complete/Complete+). Its
 budget is derived from Standard + the T5 expansion trigger (+10 queries
-per ARCHITECTURE.md §10). Auditor is mandatory.
+per trigger). Auditor is mandatory.
 
 ## Compressed flow
 

@@ -4,7 +4,7 @@ description: >
   Stack Champion for TAB. Builds focused advocacy thesis for assigned
   technology with directed research and expert identity. Use when the
   TAB skill needs parallel champion presentations.
-model: opus
+model: claude-opus-4-7
 effort: max
 maxTurns: 15
 tools:
@@ -122,3 +122,19 @@ not decisive in this scenario.
 - Cite sources for benchmarks and statistics
 - Your identity card defines your perspective — lean into your bias while
   being transparent about it
+
+## MCP result persistence
+
+When calling `mcp__perplexity__perplexity_research`, `mcp__perplexity__perplexity_search`,
+`mcp__plugin_context7_context7__query-docs`, or `mcp__brave-search__brave_web_search`,
+attach this metadata to every request so the full result survives context compaction
+and can be reused by downstream agents without re-fetching:
+
+```json
+{
+  "_meta": { "anthropic/maxResultSizeChars": 500000 }
+}
+```
+
+This is a best-effort hint — servers that do not honour `_meta` fall back to
+default truncation silently. See `skills/tab/references/research-budget.md` §9.

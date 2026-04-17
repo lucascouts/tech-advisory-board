@@ -56,6 +56,17 @@
         ]
       }
     ],
+    "TaskCreated": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-task-created.sh"
+          }
+        ]
+      }
+    ],
     "SubagentStop": [
       {
         "hooks": [
@@ -74,6 +85,40 @@
             "type": "command",
             "timeout": 10,
             "command": "${CLAUDE_PLUGIN_ROOT}/scripts/validate-on-stop.sh"
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 4,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-stop-failure.sh"
+          }
+        ]
+      }
+    ],
+    "CwdChanged": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-reactive-change.sh"
+          }
+        ]
+      }
+    ],
+    "FileChanged": [
+      {
+        "if": "TAB/**",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-reactive-change.sh"
           }
         ]
       }

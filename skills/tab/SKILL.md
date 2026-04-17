@@ -1,10 +1,9 @@
 ---
 name: tab
 description: >
-  Use this skill to deliberate on technical decisions with an expert advisory
-  board. Trigger for: stack selection, architecture choices, framework/database
-  comparisons, project planning (POC/MVP/Full), "what should I use", "compare
-  X vs Y", "analyze this project".
+  Deliberate on technical decisions with an expert advisory board — stack
+  selection, architecture, framework/DB comparisons, project planning
+  (POC/MVP/Full), "what should I use", "compare X vs Y", "analyze project".
 when_to_use: >
   Invoke when the user wants to CHOOSE a technology, COMPARE alternatives,
   PLAN an architecture, ANALYZE an existing project, or EVOLVE an MVP.
@@ -156,10 +155,15 @@ or randomly generated name per session.
    `references/research-budget.md`; every expansion MUST be logged to
    `telemetry.json.budget_adjustments[]` with `phase`, `reason`, `delta`.
 
-5. **Clarification Rounds** — For High/Very High+ only:
+5. **Clarification Rounds** — For High/Very High+ only. Ask via the native
+   `AskUserQuestion` tool (Claude Code ≥ v2.1.76); the host surfaces a
+   structured UI and records the response back into the conversation. In
+   headless mode (§1.5 of `references/automation.md`) the tool auto-skips
+   and the gaps become `context.assumptions_recorded[].confirmed = false`.
    - Post-research: 2-4 questions about gaps revealed by research
    - Mid-session: 2-3 questions about divergent champion assumptions
-   Read `references/debate-protocol.md` for format and rules.
+   Read `references/debate-protocol.md` for format, Elicitation hooks, and
+   batch-mode `PreToolUse` / `updatedInput` semantics.
 
 6. **Champion Invocation** — Read `references/archetypes.md` to select archetypes.
    Generate identity cards with random names, real credentials, declared bias/blind
@@ -328,6 +332,12 @@ Champions follow the 4-section format (+ Vanguard extras) defined in the native
 6. **Research before presenting.** No claims without prior research
 7. **Quantify with sources.** Cite metrics or explicitly state uncertainty
 8. **No hallucinated data.** Research first or state uncertainty
+9. **Long-running auditor → push notification.** When a Complete or
+   Complete+ session has been running for >20 minutes at the moment the
+   auditor subagent returns, emit a host push notification (Claude Code
+   ≥ v2.1.110) so the user can re-engage without watching the transcript.
+   Suppress silently when running headless (`claude -p`) — the host does
+   not render push there.
 
 ---
 

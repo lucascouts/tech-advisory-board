@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://tech-advisory-board/state.schema.json",
   "title": "TAB Session Hot State",
-  "description": "Hot state for resume-detection. Finalized in Block 2 (ARCHITECTURE.md §7.1).",
+  "description": "Hot state for resume-detection. Finalized in Block 2.",
   "type": "object",
   "properties": {
     "session_id": {"type": "string"},

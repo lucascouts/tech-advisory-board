@@ -1,15 +1,12 @@
 #!/usr/bin/env bash
 # tab-resume-session — detect interrupted TAB sessions and emit a resume payload.
-#
 # Usage:
 #   tab-resume-session [--tab-dir DIR] [--window-hours N] [--reconcile]
-#
 # A session is "resumable" when:
 #   - state.json exists and parses
 #   - phase_completed is NOT in {cost-report, archival}
 #   - last_updated is within --window-hours (default 24)
 #   - session dir is NOT under sessions/archived/
-#
 # Outputs (JSON on stdout):
 #   {
 #     "status": "ok" | "no-sessions",
@@ -28,9 +25,7 @@
 #       }
 #     ]
 #   }
-#
 # --reconcile flag: future use — syncs state.json after a /rewind operation.
-# See ARCHITECTURE.md §7.7, §19.
 set -euo pipefail
 
 TAB_DIR=""

@@ -18,6 +18,25 @@
     "decision-making",
     "technology-evaluation"
   ],
+  "agents": [
+    "./agents/champion.md",
+    "./agents/advisor.md",
+    "./agents/researcher.md",
+    "./agents/auditor.md",
+    "./agents/supervisor.md"
+  ],
+  "skills": [
+    "./skills/tab",
+    "./skills/rechallenge"
+  ],
+  "hooks": "./hooks/hooks.json",
+  "monitors": [
+    {
+      "name": "tab-session-monitor",
+      "description": "Streams JSON-line events as TAB sessions advance: phase transitions, subagent start/return, budget thresholds.",
+      "command": "${CLAUDE_PLUGIN_ROOT}/scripts/monitor.sh"
+    }
+  ],
   "userConfig": {
     "max_cost_per_session_usd": {
       "title": "Max cost per session (USD)",
@@ -62,6 +81,24 @@
     "adr_dir_override": {
       "title": "ADR output directory override",
       "description": "Override the default TAB/decisions/ directory for generated ADRs. Absolute path or relative to the project root. Leave unset to use the default.",
+      "type": "string",
+      "sensitive": false
+    },
+    "champion_model": {
+      "title": "Champion agent model override",
+      "description": "Override the model used by the Champion subagent. Defaults to claude-opus-4-7. Organizations with a tighter budget can pin sonnet via modelOverrides (e.g. 'claude-sonnet-4-6'). Empty = use the agent default.",
+      "type": "string",
+      "sensitive": false
+    },
+    "auditor_model": {
+      "title": "Auditor agent model override",
+      "description": "Override the model used by the Auditor subagent. Defaults to claude-opus-4-7 with effort=xhigh. Downgrading to sonnet weakens adversarial verification — use with care.",
+      "type": "string",
+      "sensitive": false
+    },
+    "advisor_model": {
+      "title": "Advisor agent model override",
+      "description": "Override the model used by the Advisor subagents. Defaults to sonnet. Pinning opus raises cost meaningfully because N advisors run in parallel.",
       "type": "string",
       "sensitive": false
     }

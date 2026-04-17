@@ -1,7 +1,7 @@
 ---
 version: 1.0
 last_updated: 2026-04-16
-scope: Block 3 — canonical output (see ARCHITECTURE.md §13, §14)
+scope: Block 3 — canonical output
 audience: TAB Moderator + external consumers
 ---
 
@@ -43,7 +43,7 @@ populated, and how consumers should interpret it.
 
 - `schema_version` follows a strict contract. **Minor** additions (new
   optional fields) do not bump it. **Breaking** changes (renamed or removed
-  fields) bump the major integer. Migration notes live in `ARCHITECTURE.md`
+  fields) bump the major integer. Migration notes live in ``
   Appendix B.
 - Consumers should declare the minimum `schema_version` they accept and emit
   a soft warning (not a hard error) when a newer version is encountered.
@@ -61,7 +61,7 @@ axes: `mode` and `complexity`.
 - `mode` describes *how the session was run* (`Express` through `Complete+`
   plus `Rechallenge`).
 - `complexity` describes *the user's decision difficulty* (`Trivial` through
-  `Very High`). The default mapping is documented in ARCHITECTURE.md §5;
+  `Very High`). The default mapping is documented in ;
   users may override.
 
 ### 2.2 `context`
@@ -165,7 +165,7 @@ TAB update.
 
 ## 3. Confidence tags
 
-Every major claim carries a confidence tag (see ARCHITECTURE.md §11):
+Every major claim carries a confidence tag:
 
 | Tag | Semantic |
 |---|---|
@@ -182,7 +182,7 @@ automated action.
 ## 4. Validation
 
 TAB ships a validator at `scripts/validate-synthesis-json.sh`. It runs
-the hard-fail assertions from ARCHITECTURE.md §9.1 using Python stdlib
+the hard-fail assertions from  using Python stdlib
 alone. If `jsonschema` is installed, it additionally performs full-schema
 validation against `schemas/synthesis.schema.json`.
 
@@ -216,9 +216,6 @@ Before shipping any consumer that reads `synthesis.json`:
 
 ## 6. Related documents
 
-- `ARCHITECTURE.md` §13 — the full interoperability contract
-- `ARCHITECTURE.md` §9.1 — validation rules
-- `ARCHITECTURE.md` §11 — confidence tags
 - `schemas/synthesis.schema.json` — authoritative JSON Schema
 - `references/synthesis-template.md` — Moderator's output template
 - `references/persistence-protocol.md` — when/where synthesis.json is written

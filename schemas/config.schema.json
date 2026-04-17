@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://tech-advisory-board/config.schema.json",
   "title": "TAB Project Config",
-  "description": "Project-level configuration at <project-root>/TAB/config.json. Team-shared values are stored here; personal values live in the plugin's userConfig (see ARCHITECTURE.md §8.3).",
+  "description": "Project-level configuration at <project-root>/TAB/config.json. Team-shared values are stored here; personal values live in the plugin's userConfig.",
   "type": "object",
   "additionalProperties": false,
   "properties": {

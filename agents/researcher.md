@@ -83,3 +83,19 @@ Return EXACTLY this structure:
 
 **Unverified Data**
 - [List of claims with only 1 source or none]
+
+## MCP result persistence
+
+When calling `mcp__perplexity__perplexity_research`, `mcp__perplexity__perplexity_search`,
+`mcp__plugin_context7_context7__query-docs`, or `mcp__brave-search__brave_web_search`,
+always attach:
+
+```json
+{
+  "_meta": { "anthropic/maxResultSizeChars": 500000 }
+}
+```
+
+Research cache then survives context compaction and can be cited verbatim by
+Champion / Auditor downstream without a second paid fetch. Best-effort hint —
+servers that ignore `_meta` fall back to default truncation.

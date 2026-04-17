@@ -124,26 +124,42 @@ After researchers return and before the Landscape Scan, the Moderator identifies
 gaps revealed by research:
 
 1. Review all research reports for contradictions, gaps, and assumption-dependent data
-2. Present 2-4 directed questions to the user
+2. Invoke the native `AskUserQuestion` tool with 2-4 directed questions
+   (Claude Code ≥ v2.1.76). The host renders a structured multi-question UI,
+   attaches responses to `context.assumptions_recorded[]`, and fires the
+   `Elicitation` / `ElicitationResult` hooks for any host-side telemetry.
+3. In **batch / headless** mode (`claude -p`) clarifications can instead
+   be resolved via `PreToolUse` `updatedInput` — the CI writer answers the
+   Moderator's questions from a fixture file without user interaction.
 
-**Format (translate to user's language at runtime):**
-```
-"Initial research revealed points that need clarification:
-
-1. [Tool X] changed its license to [SSPL] on [date]. Is this acceptable
-   for your distribution model?
-2. Benchmarks show [Y] scaling to [N] req/s, but you mentioned [M] as
-   target. Does this change performance expectations?
-3. [Z] has a breaking change in v4 that affects [feature]. Do you depend
-   on this feature?
-
-Please respond briefly so the analysis can proceed with correct data."
+**Tool payload template:**
+```json
+{
+  "tool_name": "AskUserQuestion",
+  "input": {
+    "questions": [
+      {
+        "id": "license-change",
+        "question": "Tool X changed its license to SSPL on <date>. Is this acceptable for your distribution model?",
+        "allow_free_text": true
+      },
+      {
+        "id": "throughput-target",
+        "question": "Benchmarks show Y scaling to N req/s, but you mentioned M as target. Does this change performance expectations?",
+        "choices": ["Same target", "Relaxed", "Tightened"]
+      }
+    ]
+  }
+}
 ```
 
 **Rules:**
-- Maximum 4 questions
-- If the user doesn't respond to some, record as assumptions and proceed
+- Maximum 4 questions per round
+- If a question goes unanswered (user skips, timeout, headless), store the
+  gap as `context.assumptions_recorded[].confirmed = false` and proceed
 - Only for High and Very High+ complexity
+- Responses live in `state-full.json.clarifications[]` with the question
+  id and the verbatim reply for audit
 
 ---
 

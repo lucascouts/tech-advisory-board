@@ -117,13 +117,33 @@ entry = {k: v for k, v in entry.items() if v is not None}
 
 subs = sf.setdefault("subagents_invoked", [])
 # Best-effort: if there is an open entry for the same type without
-# ended_at, close it rather than duplicating.
+# ended_at, close it rather than duplicating. With the TaskCreated hook in
+# place (Claude Code >= v2.1.84) the pending entry carries the real
+# started_at and task_id — we reuse them and only append a fallback entry
+# if no match is found (older hosts).
+task_id = payload.get("task_id") or payload.get("id") \
+          or payload.get("invocation_id")
 closed = False
 for s in reversed(subs):
-    if s.get("subagent_type") == subagent_type and s.get("ended_at") is None:
+    matches_task_id = (task_id is not None
+                       and s.get("task_id") == task_id)
+    matches_type_open = (s.get("subagent_type") == subagent_type
+                         and s.get("ended_at") is None)
+    if matches_task_id or matches_type_open:
         s["ended_at"] = ended_at
         if duration_ms is not None:
             s["duration_ms"] = duration_ms
+        elif s.get("started_at"):
+            # Derive duration when the host did not pass one and we now
+            # have real started_at from TaskCreated.
+            try:
+                from datetime import datetime
+                fmt = "%Y-%m-%dT%H:%M:%SZ"
+                t0 = datetime.strptime(s["started_at"].rstrip("Z") + "Z", fmt)
+                t1 = datetime.strptime(ended_at.rstrip("Z") + "Z", fmt)
+                s["duration_ms"] = int((t1 - t0).total_seconds() * 1000)
+            except (ValueError, TypeError):
+                pass
         if usage:
             s["usage"] = usage
         closed = True

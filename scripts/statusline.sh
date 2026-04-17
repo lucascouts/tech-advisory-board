@@ -4,6 +4,12 @@
 # a single concise line. Silent when no TAB session is active. Budget:
 # <1000ms (enforced by host timeout). Caches parsed state between calls
 # via a tempfile under ${CLAUDE_PLUGIN_DATA}/.statusline-cache.
+#
+# This is the *pull-model* snapshot — re-rendered every host tick. For a
+# *push-model* event stream (phase transitions, subagent lifecycle, budget
+# thresholds) see scripts/monitor.sh, declared under the `monitors` key of
+# plugin.json. The two complement each other: statusline is the always-on
+# header; monitor is the scrolling event log.
 set -uo pipefail
 
 # Fast path: when we're in a cloud/remote session, the host does not

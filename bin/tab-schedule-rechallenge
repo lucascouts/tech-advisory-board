@@ -1,36 +1,29 @@
 #!/usr/bin/env bash
 # tab-schedule-rechallenge — prepare a scheduled rechallenge for a given ADR.
-#
 # This script cannot call the Claude Code CronCreate tool directly from
 # bash. Instead it validates the request, writes the schedule metadata
 # alongside the ADR, and emits an activation prompt that the user (or
 # the tab skill itself) can paste into an active Claude session to
 # register the cron task via the /loop skill.
-#
 # Usage:
 #   tab-schedule-rechallenge <adr-path> --every "<cron>" [--mode MODE]
 #                                       [--tab-dir DIR] [--record-task TASK_ID]
 #                                       [--dry-run]
-#
-# Cron format (5 fields, ARCHITECTURE.md §17.2): minute hour day month day-of-week
+# Cron format (5 fields): minute hour day month day-of-week
 #   Wildcards (*), single values, steps (*/15), ranges (1-5), lists (1,15,30).
 #   Extended forms (L, W, ?, MON/JAN aliases) are NOT supported.
-#
 # Canonical examples:
 #   "0 9 * * 1"      — every Monday at 09:00 (weekly review)
 #   "0 0 1 * *"      — first day of every month at midnight (monthly)
 #   "0 0 1 */3 *"    — first day of every 3rd month (quarterly)
 #   "0 0 1 1,7 *"    — January 1st and July 1st (semi-annual)
 #   "0 0 1 1 *"      — January 1st at midnight (annual)
-#
 # Modes:
 #   quick (default) — compressed rechallenge flow
 #   full            — request a full /tech-advisory-board:tab session instead
-#
 # Environment:
 #   CLAUDE_CODE_DISABLE_CRON=1 — script exits with a clear message and does
 #       NOT write schedule metadata.
-#
 # Exit codes:
 #   0   schedule metadata written (or dry-run completed)
 #   1   invalid input (missing ADR, bad cron, already superseded, cron disabled)

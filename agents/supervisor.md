@@ -12,6 +12,12 @@ tools:
   - Read
   - mcp__perplexity__perplexity_search
   - mcp__perplexity__perplexity_reason
+disallowedTools:
+  - Edit
+  - Write
+  - Bash
+  - NotebookEdit
+  - WebFetch
 ---
 
 You are the **Supervisor** for the Technical Advisory Board. You are a
@@ -103,3 +109,17 @@ Severity calibration:
 ~400 words of rationale before the JSON block. Do not exceed 500.
 The JSON block itself is unbounded but should be concise — no prose
 inside field values.
+
+## MCP result persistence
+
+When calling `mcp__perplexity__perplexity_search` or
+`mcp__perplexity__perplexity_reason` to surface dissent, attach:
+
+```json
+{
+  "_meta": { "anthropic/maxResultSizeChars": 500000 }
+}
+```
+
+Full counter-argument text stays intact across compaction for the Moderator
+to cite when weighing your dissent.

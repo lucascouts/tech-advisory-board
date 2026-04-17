@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://tech-advisory-board/telemetry.schema.json",
   "title": "TAB Session Telemetry",
-  "description": "Cost and time tracking per session. Finalized in Block 2 (ARCHITECTURE.md §7.2).",
+  "description": "Cost and time tracking per session. Finalized in Block 2.",
   "type": "object",
   "properties": {
     "session_id": {"type": "string"},

@@ -1,15 +1,17 @@
 #!/usr/bin/env bash
 # tab-compute-cost — compute USD cost from token counts, or roll up a telemetry file.
-#
 # Modes:
 #   tab-compute-cost <model> <input-tokens> <output-tokens>
 #       → {"model": "...", "tokens_in": N, "tokens_out": N, "cost_usd": F}
-#
 #   tab-compute-cost --from-telemetry <path-to-telemetry.json>
 #       → roll-up across all phases, emits the totals block per §7.2
-#
+#   tab-compute-cost --from-cost-stdin
+#       → consume the breakdown JSON emitted by Claude Code's `/cost`
+#         command (Claude Code ≥ v2.1.92) on stdin; re-emits the totals
+#         block with native per-model + cache-hit accounting, bypassing
+#         the heuristic rate table below. Preferred when available.
 # Rates are the published per-Mtok rates for Claude models (see
-# ARCHITECTURE.md §7.2 "cost_rates_used"). Override via env vars:
+#  "cost_rates_used"). Override via env vars:
 #   TAB_RATE_OPUS_IN / TAB_RATE_OPUS_OUT
 #   TAB_RATE_SONNET_IN / TAB_RATE_SONNET_OUT
 #   TAB_RATE_HAIKU_IN / TAB_RATE_HAIKU_OUT
@@ -23,6 +25,30 @@ fi
 if ! command -v python3 >/dev/null 2>&1; then
     echo "python3 required" >&2
     exit 1
+fi
+
+if [[ "${1:-}" == "--from-cost-stdin" ]]; then
+    exec python3 -c '
+import json, sys
+try:
+    payload = json.load(sys.stdin)
+except json.JSONDecodeError as e:
+    print(f"{{\"error\":\"invalid JSON on stdin: {e}\"}}", file=sys.stderr)
+    sys.exit(2)
+
+totals = {
+    "cost_usd": float(payload.get("total_cost_usd") or 0.0),
+    "tokens_in": int((payload.get("tokens") or {}).get("input") or 0),
+    "tokens_out": int((payload.get("tokens") or {}).get("output") or 0),
+    "cache_read_tokens": int((payload.get("cache") or {}).get("read") or 0),
+    "cache_write_tokens": int((payload.get("cache") or {}).get("write") or 0),
+    "cache_read_cost_usd": float((payload.get("cache") or {}).get("read_cost_usd") or 0.0),
+    "cache_write_cost_usd": float((payload.get("cache") or {}).get("write_cost_usd") or 0.0),
+    "by_model": payload.get("by_model") or {},
+    "source": "/cost",
+}
+print(json.dumps({"totals": totals}, indent=2))
+'
 fi
 
 if [[ "${1:-}" == "--from-telemetry" ]]; then

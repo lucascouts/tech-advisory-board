@@ -74,11 +74,27 @@ jobs:
       - name: Run TAB (headless)
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          # Extended prompt cache (1h) is strongly recommended for Complete /
+          # Complete+ sessions — the Moderator system prompt is reused across
+          # every subagent dispatch, so cache hit rate typically >60% and
+          # compensates for Opus 4.7 pricing. See references/automation.md.
+          ENABLE_PROMPT_CACHING_1H: "1"
         run: |
           claude -p "/tech-advisory-board:tab \"${{ steps.q.outputs.question }}\"" \
             --output-format json \
             --allowedTools "WebSearch,WebFetch,Read,Grep,Glob,Agent,TodoWrite" \
             > tab-output.json
+
+      - name: Fail fast if TAB was demoted at plugin init
+        run: |
+          # Claude Code >= v2.1.111 emits `plugin_errors` in the init event
+          # of `--output-format stream-json`. If TAB failed to load, every
+          # downstream step is wasted tokens.
+          if jq -e '.plugin_errors[] | select(.plugin_name == "tech-advisory-board")' tab-output.json >/dev/null 2>&1; then
+            echo "::error::TAB plugin was demoted at init. See plugin_errors."
+            jq '.plugin_errors[] | select(.plugin_name == "tech-advisory-board")' tab-output.json
+            exit 1
+          fi
 
       - name: Locate synthesis
         id: synth

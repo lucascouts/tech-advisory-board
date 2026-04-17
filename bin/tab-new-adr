@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 # tab-new-adr — generate a MADR-formatted ADR from a TAB synthesis.json.
-#
 # Usage:
 #   tab-new-adr <path-to-synthesis.json> [--tab-dir DIR] [--slug SLUG] [--dry-run]
-#
 # Behavior:
 #   1. Reads synthesis.json
 #   2. Scans <TAB-DIR>/decisions/ for the next zero-padded NNNN
@@ -11,10 +9,8 @@
 #   4. Writes <TAB-DIR>/decisions/<NNNN>-<slug>.md in MADR format
 #   5. Appends a row to <TAB-DIR>/index.md and rewrites the table
 #   6. Prints the ADR path (absolute)
-#
 # If --dry-run is set, no files are written; the ADR markdown is emitted to stdout.
-#
-# See ARCHITECTURE.md §7.5 for MADR field list.
+# See  for MADR field list.
 set -euo pipefail
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then

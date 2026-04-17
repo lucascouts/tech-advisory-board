@@ -1,7 +1,7 @@
 ---
 version: 1.0
 last_updated: 2026-04-16
-scope: Block 5a — data-driven claims (ARCHITECTURE.md §11)
+scope: Block 5a — data-driven claims
 audience: TAB Moderator + Champions + Advisors + Auditor
 ---
 
@@ -46,7 +46,7 @@ Every field that represents a claim carries a `confidence` sibling:
 ```
 
 In `claims_registry[]` (state-full.json), confidence is a required field
-per entry; see ARCHITECTURE.md §7.1.
+per entry; see .
 
 ### 2.3 In ADR (`TAB/decisions/NNNN-*.md`)
 

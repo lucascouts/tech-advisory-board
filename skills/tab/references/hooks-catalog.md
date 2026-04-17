@@ -1,7 +1,7 @@
 ---
 version: 1.0
 last_updated: 2026-04-16
-scope: Block 6 — automation hooks (ARCHITECTURE.md §16)
+scope: Block 6 — automation hooks
 audience: TAB maintainers, operators, advanced users
 ---
 
@@ -129,7 +129,7 @@ never ran, but previously interrupted sessions still should age out of
 `bin/tab-schedule-rechallenge` writes schedule metadata to
 `<adr>.schedule.json` when a user opts into periodic rechallenge. The
 host's `CronCreate` auto-expires recurring tasks after 7 days
-(ARCHITECTURE.md §17.2). TAB's design allows a SessionStart
+. TAB's design allows a SessionStart
 extension to re-cron any schedule with `active: true` whose last run
 is older than the cron interval. This re-cron step is **not wired by
 default** — opting in requires the user to add a second hook entry to
@@ -191,7 +191,5 @@ Two levers:
 
 ## 7. Related documents
 
-- `ARCHITECTURE.md` §16 — full specification
-- `ARCHITECTURE.md` §17 — scheduled rechallenge mechanics
 - `scripts/*.sh` — hook implementations
 - `hooks/hooks.json` — declarative wiring

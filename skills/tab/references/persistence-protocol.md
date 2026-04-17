@@ -1,7 +1,7 @@
 ---
 version: 1.0
 last_updated: 2026-04-16
-scope: Block 2 — persistence layer (see ARCHITECTURE.md §7, §14)
+scope: Block 2 — persistence layer
 ---
 
 # Persistence Protocol
@@ -100,7 +100,7 @@ resume-check is fast.
 
 Claim registry entries accumulate here. Every quantitative or factual
 claim made in a session is appended — champions, advisors, researcher,
-auditor, even user-supplied facts. See ARCHITECTURE.md §7.1 for the
+auditor, even user-supplied facts. See  for the
 per-entry schema.
 
 ---
@@ -135,7 +135,7 @@ After each phase end, compare `totals.cost_usd` against
 The `<date_window>` is either `YYYY-MM` (month-granular) or `YYYY-W<NN>`
 (week-granular) depending on volatility.
 
-TTL policy (ARCHITECTURE.md §7.3):
+TTL policy:
 
 | Age (days) | Behavior |
 |---|---|
@@ -183,5 +183,5 @@ state. When in doubt, write `state.json` first (atomic), then
 - Raw MCP responses (summarize to `research-cache.json`; raw bodies are transient)
 - Host-level context window bytes (the host manages its own checkpoints via `/rewind`; see §19)
 
-See ARCHITECTURE.md §19 for the boundary between TAB's `state.json`
+See  for the boundary between TAB's `state.json`
 resumption and the host's native `/rewind` rollback.

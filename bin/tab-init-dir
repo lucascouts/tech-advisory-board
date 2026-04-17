@@ -1,15 +1,11 @@
 #!/usr/bin/env bash
 # tab-init-dir — lazy initialization of TAB/ under the user's project root.
 # Idempotent: safe to re-run. Also archives idle sessions (>N hours).
-#
 # Usage:
 #   tab-init-dir [--use-git-root] [--archive-idle-hours N] [--base DIR]
-#
 # Outputs (JSON on stdout):
 #   {"tab_dir": "...", "created": true|false, "archived": [...]}
-#
 # Reads TAB/config.json if present for defaults. CLI flags win over config.
-# See ARCHITECTURE.md §2.2, §2.2.1, §7.7.
 set -euo pipefail
 
 USE_GIT_ROOT=false
