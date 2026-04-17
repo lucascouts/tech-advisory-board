@@ -2,6 +2,12 @@
 
 All notable changes to this plugin are documented here. This project adheres to [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] — 2026-04-17
+
+### Fixed
+
+- Removed the redundant `"hooks": "./hooks/hooks.json"` key from `.claude-plugin/plugin.json`. The standard `hooks/hooks.json` path is auto-loaded by Claude Code, so declaring it in `manifest.hooks` caused a `Duplicate hooks file detected` error at plugin load time. `manifest.hooks` is now reserved for additional hook files outside the default path.
+
 ## [0.1.0] — 2026-04-16
 
 Initial plugin release. Tracks Claude Code v2.1.72 through v2.1.111.
