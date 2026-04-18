@@ -133,6 +133,72 @@
           }
         ]
       }
+    ],
+    "InstructionsLoaded": [
+      {
+        "matcher": "session_start",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-instructions-loaded.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-instructions-loaded.sh"
+          }
+        ]
+      }
+    ],
+    "Elicitation": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-elicitation.sh"
+          }
+        ]
+      }
+    ],
+    "ElicitationResult": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-elicitation.sh"
+          }
+        ]
+      }
+    ],
+    "PermissionDenied": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-permission-denied.sh"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-subagent-start.sh"
+          }
+        ]
+      }
     ]
   }
 }

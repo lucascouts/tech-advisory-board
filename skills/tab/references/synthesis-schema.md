@@ -27,7 +27,7 @@ populated, and how consumers should interpret it.
 | `session` | yes | Session metadata |
 | `context` | yes | Detected + confirmed project context |
 | `landscape` | yes | Shortlist + discard table |
-| `champions` | Standard+ | Empty in Express mode |
+| `champions` | Standard+ | Empty in Instant mode |
 | `cross_examination` | Standard+ | Present only when cross-exam phase ran |
 | `scores` | Standard+ | Score matrix + divergence analysis |
 | `recommendation` | yes | The decision itself |
@@ -36,7 +36,7 @@ populated, and how consumers should interpret it.
 | `unverified_claims` | yes | May be empty array |
 | `auditor_findings` | Complete/Complete+/Rechallenge | Non-empty in those modes |
 | `supervisor_dissent` | on-trigger | `null` when no supervisor was invoked |
-| `adr_path` | yes | `null` when ADR was skipped (Express/Quick only) |
+| `adr_path` | yes | `null` when ADR was skipped (Instant/Fast only) |
 | `consumable_hints` | no | Optional hints for downstream tools |
 
 ### 1.1 Versioning policy
@@ -58,8 +58,9 @@ Contains `id` (session directory name), original `question`, ISO-8601
 timestamps, detected `language` (BCP 47 tag), and the two classification
 axes: `mode` and `complexity`.
 
-- `mode` describes *how the session was run* (`Express` through `Complete+`
-  plus `Rechallenge`).
+- `mode` describes *how the session was run* (`Instant` through `Complete+`
+  plus `Rechallenge`). Legacy aliases `Express` / `Quick` are still accepted
+  on input but normalized to `Instant` / `Fast` — scheduled for removal in 0.3.
 - `complexity` describes *the user's decision difficulty* (`Trivial` through
   `Very High`). The default mapping is documented in ;
   users may override.
@@ -154,7 +155,7 @@ the strongest signal that the "obvious" answer may be wrong.
 ### 2.13 `adr_path` and `consumable_hints`
 
 `adr_path` is a relative path from the project root to the generated MADR
-ADR. Null in Express/Quick modes where ADR generation is optional.
+ADR. Null in Instant/Fast modes where ADR generation is optional.
 
 `consumable_hints` is freeform — TAB uses `consumable_hints.task_generators`
 to point external task-generation plugins at the richest fields. Schema is

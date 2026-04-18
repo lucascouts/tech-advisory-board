@@ -54,8 +54,18 @@ def now():
 
 def emit(event, session_id, **extra):
     line = {"at": now(), "event": event, "session_id": session_id, **extra}
-    sys.stdout.write(json.dumps(line, separators=(",", ":")) + "\n")
+    encoded = json.dumps(line, separators=(",", ":"))
+    sys.stdout.write(encoded + "\n")
     sys.stdout.flush()
+    # §3.6 — mirror into the session's timeline-events.ndjson so the
+    # timeline HTML can replay the stream without a live host connection.
+    if session_id:
+        try:
+            path = os.path.join(SESSIONS_DIR, session_id, "timeline-events.ndjson")
+            with open(path, "a") as tf:
+                tf.write(encoded + "\n")
+        except OSError:
+            pass
 
 def find_newest_session():
     best = None

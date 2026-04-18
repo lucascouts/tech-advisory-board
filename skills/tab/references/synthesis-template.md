@@ -13,12 +13,12 @@ the user's language.
 
 ---
 
-## Express Mode Template
+## Instant Mode Template
 
 Use this template for Trivial complexity decisions only.
 
 **[Moderator Name] (Moderator):** I classify this decision as **Trivial** because
-[reason]. **Express** mode.
+[reason]. **Instant** mode.
 
 **[Scout Name] (Landscape Scout):** [Compact shortlist — 2-3 lines, one per alternative]
 
@@ -28,7 +28,7 @@ Reversibility: [Easy/Medium/Hard] — [1 sentence].
 
 ---
 
-## Quick Mode Template
+## Fast Mode Template
 
 Use this template for Simple complexity decisions only.
 
@@ -215,6 +215,72 @@ The only thing that would concern me is [main risk], and I would mitigate it wit
 
 ---
 
+## 7. Adoption Scaffold
+
+**Purpose:** turn the decision from "choose X" into an operational contract. Do
+NOT emit code, do NOT step into implementation — stay at the level of steps,
+risks, and checkpoints. Mandatory in `Complete` / `Complete+`; optional
+(compressed) in `Standard`; skipped in `Instant` / `Fast`.
+
+### Migration steps (abstract, not code)
+
+1. [Step 1 — e.g. "Validate current routing against chosen framework"]
+2. [Step 2 — e.g. "Identify SSR/ISR touchpoints in the current stack"]
+3. [Step 3 — e.g. "Roll out canary path: 10% → 50% → 100%"]
+
+### Lock-in risks
+
+- [Vendor / platform assumption — e.g. "Vercel edge middleware"]
+- [Architectural assumption — e.g. "React Server Components; reverse costs 3-4 sprints"]
+
+### Operational checklist (post-adoption)
+
+- **D+30:** [Metric to watch — e.g. "TTFB p95 vs baseline"]
+- **D+90:** [Metric to watch — e.g. "bundle-size regression"]
+- **D+180:** [Automatic rechallenge trigger — schedule via `tab-schedule-rechallenge` or `CronCreate`]
+
+### Integration debt
+
+- [Integration 1 — e.g. "Analytics: requires server-components adaptation"]
+- [Integration 2 — e.g. "Auth: NextAuth v5 beta — plan B if it breaks"]
+
+---
+
+## 8. Decision Sensitivity
+
+**Purpose:** answer "what would change the decision?". Mandatory in `Standard+`.
+
+### Threshold analysis
+
+State the context dimensions whose value, if changed, would reorder the ranking:
+
+- If **[dimension X] < [threshold]** → [alternative] takes the lead because [reason].
+- If **[dimension Y] > [threshold]** → [alternative] enters the shortlist because [reason].
+- If **[dimension Z]** changes direction → [alternative] becomes preferable because [reason].
+
+Concrete example template:
+
+```
+- If team_size < 2        → SvelteKit leads (lower conceptual overhead)
+- If infra_budget < $500  → Astro becomes viable (static-first)
+- If timeline > 18 months → Qwik joins shortlist (long-term bet)
+- If traffic > 10M req/mo → Remix closes the gap (superior edge p95)
+```
+
+### Stability vs fragility
+
+Classify each dimension as stable or fragile:
+
+- **Stable dimensions:** [list — e.g. "learning curve, ecosystem maturity"]
+- **Fragile dimensions:** [list — e.g. "deployment cost (small budget shift reorders ranking)"]
+
+The recommendation is **stable when the fragile dimensions stay within a
+narrow band**. If any fragile dimension is near its reordering threshold,
+annotate the primary recommendation with `fragile: true` so consumers
+can react.
+
+---
+
 ## Post-Decision Handoff
 
 After the recommendation, suggest relevant skills for next steps based on the
@@ -249,7 +315,7 @@ This is opt-in. Only generate if the user accepts.
 
 ## Notes on Using This Template
 
-- **Express and Quick modes use their own compact templates above** — do NOT use the full Standard/Complete template for these modes.
+- **Instant and Fast modes use their own compact templates above** — do NOT use the full Standard/Complete template for these modes.
 - **Adapt, don't fill mechanically.** If a section isn't relevant, compress or skip it.
 - **Quantify where possible.** "Scales better" is weak. "Supports 10K req/s vs 2K req/s on the same hardware" is strong.
 - **Be honest about uncertainty.** If the board couldn't reach consensus, say so.

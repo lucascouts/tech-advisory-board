@@ -129,8 +129,26 @@ per trigger). Auditor is mandatory.
 ## Compressed flow
 
 ```
-Pre-flight  →  Delta research  →  Auditor  →  3 Advisors  →  Verdict  →  Act
+Pre-flight  →  Outcome prompt  →  Delta research  →  Auditor  →  3 Advisors  →  Verdict  →  Act
 ```
+
+### Phase 0.5 — Outcome prompt (§3.3)
+
+Before delta research, read the ADR's YAML frontmatter `outcome:` block:
+
+- If `outcome.status == "pending"` and the ADR is older than 90 days, ask
+  the user interactively (via `AskUserQuestion`):
+  > "This decision hasn't had its outcome recorded yet. Would you like to
+  >  fill it in now? (success / pivot / abandon / skip)"
+- When the user answers, invoke `${CLAUDE_PLUGIN_ROOT}/bin/tab-record-outcome`
+  with the flags derived from the user's response. Skip if they decline.
+- If `outcome.status != "pending"`, pass the outcome record into the
+  auditor and advisors as weighting input — a `pivot` or `abandon`
+  prior outcome is strong counter-evidence to the original decision.
+
+The outcome does NOT replace delta research; it complements it. Champions
+that defended the original primary receive the outcome as a bias signal
+(see the COI disclosure card in the respective agent frontmatter).
 
 ### Phase 1 — Delta research
 

@@ -63,6 +63,11 @@ mode = state.get("mode") or "?"
 bc = state.get("budget_consumed") or {}
 cost = bc.get("cost_usd", 0.0)
 
+# §3.5.3 language lock — re-inject the session_language recorded in Phase 1
+# so champions / advisors keep consistent output after compaction.
+# Precedence: state-full.session_language > state.language > empty.
+session_language = (sf.get("session_language") or state.get("language") or "").strip()
+
 # Digest claims_registry — top 8 by confidence + recency
 registry = sf.get("claims_registry") or []
 # Order: high-conf first, then med-conf, then low-conf, then unverified
@@ -82,6 +87,12 @@ lines = [
     f"  mode: {mode}  phase_completed: {phase}  → next: {next_phase}",
     f"  cost: ${cost:.2f}  subagents: {active} active / {total_subs} total",
 ]
+
+if session_language:
+    lines.append(
+        f"  session_language: {session_language} (LOCKED in Phase 1 — do NOT re-detect; "
+        f"all Moderator, Champion, Advisor, Auditor output stays in this language)"
+    )
 
 if top:
     lines.append("  top claims from state-full.json claims_registry:")

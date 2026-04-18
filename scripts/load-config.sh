@@ -14,6 +14,8 @@
 #   CLAUDE_PLUGIN_OPTION_max_cost_per_session_usd → budget.max_cost_per_session_usd
 #   CLAUDE_PLUGIN_OPTION_warn_at_usd              → budget.warn_at_usd
 #   CLAUDE_PLUGIN_OPTION_language_preference      → language_preference
+#   CLAUDE_PLUGIN_OPTION_default_mode             → default_mode (legacy
+#     aliases Express/Quick normalized to Instant/Fast — removal in 0.3)
 set -uo pipefail
 
 BASE=""
@@ -156,6 +158,18 @@ v = getenv_str("language_preference")
 if v is not None:
     merged["language_preference"] = v
     overrides_applied.append("language_preference")
+
+# default_mode (userConfig) — normalize legacy aliases Express/Quick
+# (Express → Instant, Quick → Fast) and surface them in provenance so
+# downstream consumers can see the rewrite.
+v = getenv_str("default_mode")
+if v is not None:
+    alias_map = {"Express": "Instant", "Quick": "Fast"}
+    normalized = alias_map.get(v, v)
+    merged["default_mode"] = normalized
+    overrides_applied.append("default_mode")
+    if normalized != v:
+        overrides_applied.append(f"default_mode:legacy-alias({v}→{normalized})")
 
 # --- Envelope with provenance ---
 result = {

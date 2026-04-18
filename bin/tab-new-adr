@@ -124,6 +124,25 @@ date_str = (session.get("completed_at") or session.get("started_at")
 
 # ---- MADR body ----
 lines = []
+
+# YAML frontmatter — MADR 3 allows optional front-matter; TAB uses it to
+# carry structured `outcome` tracking (see §3.3 of APRIMORAMENTOS.md).
+# Consumers that predate front-matter support simply skip it.
+lines.append("---")
+lines.append(f"adr_number: {nnnn}")
+lines.append(f"session_id: {session.get('id', '?')}")
+lines.append(f"mode: {session.get('mode', '?')}")
+lines.append(f"complexity: {session.get('complexity', '?')}")
+lines.append(f"date: {date_str}")
+lines.append("status: proposed")
+lines.append("outcome:")
+lines.append("  status: pending     # success | pivot | abandon | pending")
+lines.append("  measured_at: null   # ISO-8601 date populated by tab-record-outcome")
+lines.append("  actual_vs_predicted: []")
+lines.append("  lessons: []")
+lines.append("---")
+lines.append("")
+
 lines.append(f"# {nnnn}. {session.get('question', slug)}")
 lines.append("")
 lines.append("- **Status:** proposed")

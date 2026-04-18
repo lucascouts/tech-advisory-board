@@ -14,8 +14,8 @@ Phase-by-phase protocol for the Technical Advisory Board deliberation.
 
 | Mode | Phases Executed |
 |------|----------------|
-| **Express** | Research (light) -> Landscape Scan -> Direct Recommendation |
-| **Quick** | Research -> Landscape Scan -> 2 Champion Presentations -> 2 Advisor Verdicts -> Synthesis |
+| **Instant** | Research (light) -> Landscape Scan -> Direct Recommendation |
+| **Fast** | Research -> Landscape Scan -> 2 Champion Presentations -> 2 Advisor Verdicts -> Synthesis |
 | **Standard** | All phases, cross-examination limited to 1 round on biggest divergence |
 | **Complete** | All phases, full depth |
 | **Complete+** | All phases + extended research + multiple Wildcards possible |
@@ -63,8 +63,8 @@ Queries and retries are tracked separately:
 
 | Mode | Max queries/tool | Max total queries | Retry budget (extra) |
 |---|---|---|---|
-| Express | 2 | 5 | +1 |
-| Quick | 3 | 10 | +2 |
+| Instant | 2 | 5 | +1 |
+| Fast | 3 | 10 | +2 |
 | Standard | 3 | 20 | +6 |
 | Complete/Complete+ | 5 | 35 | +10 |
 
@@ -370,8 +370,8 @@ Each advisor receives:
 
 | Mode | Advisors | Execution |
 |------|----------|-----------|
-| Express | 0 | -- |
-| Quick | 2 | Main context (sequential) |
+| Instant | 0 | -- |
+| Fast | 2 | Main context (sequential) |
 | Standard | 3-4 | Parallel subagents |
 | Complete/Complete+ | 4-6 | Parallel subagents |
 
@@ -380,8 +380,18 @@ Each advisor receives:
 After all advisors return, the Moderator consolidates:
 
 1. **Build the score matrix** (raw scores per advisor per champion)
-2. **Identify divergences:** scores differing by >3 points for same proposal
-3. **Surface verified data:** compile all claim verifications
+2. **Normalize via z-score (per-advisor)** — pipe the matrix into
+   `${CLAUDE_PLUGIN_ROOT}/bin/tab-score-zscore` to compute `score_z` per
+   row and `mean_z` per champion. This removes each advisor's individual
+   drift (lenient vs harsh calibration) and surfaces their *relative
+   preference* rather than their scale. Advisors whose σ = 0 (all scores
+   identical) are skipped — they carry no differentiating signal.
+3. **Rank by mean_z** for the synthesis; keep raw scores in the matrix
+   for transparency. A large gap between raw ranking and z-ranking is a
+   Supervisor §12.1 trigger candidate.
+4. **Identify divergences:** scores differing by >3 points (raw) OR where
+   two advisors place the same champion in opposite halves after z-score
+5. **Surface verified data:** compile all claim verifications
 
 ### Divergence Resolution (Complete/Complete+ only)
 

@@ -71,28 +71,45 @@ jobs:
             echo "question=${{ github.event.pull_request.title }}" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Run TAB (headless)
+      - name: Resolve plugin root
+        id: plugin
+        run: |
+          PLUGIN_ROOT=$(claude plugin path tech-advisory-board)
+          echo "root=$PLUGIN_ROOT" >> "$GITHUB_OUTPUT"
+
+      - name: Run TAB (headless, --bare, stream-json)
         env:
           CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          # Extended prompt cache (1h) is strongly recommended for Complete /
-          # Complete+ sessions — the Moderator system prompt is reused across
-          # every subagent dispatch, so cache hit rate typically >60% and
-          # compensates for Opus 4.7 pricing. See references/automation.md.
+          # Extended prompt cache (1h) — default in CI per §3.8.3 / CHANGELOG;
+          # Moderator system prompt is reused across every subagent dispatch,
+          # cache hit rate >60% compensates for Opus 4.7 pricing. Required
+          # for Complete / Complete+; optional but recommended otherwise.
           ENABLE_PROMPT_CACHING_1H: "1"
         run: |
+          # --bare             : skip plugin auto-discovery (CC ≥ v2.1.81). We
+          #                      install the marketplace plugin explicitly above;
+          #                      bare mode prevents the runner's own global
+          #                      plugins from interfering with the TAB contract.
+          # --include-partial-messages : surface the stream-json init event so we
+          #                      can fail fast on `plugin_errors`.
+          # --json-schema      : validate the final assistant message against
+          #                      the TAB synthesis contract (schemas/synthesis.schema.json).
           claude -p "/tech-advisory-board:tab \"${{ steps.q.outputs.question }}\"" \
-            --output-format json \
+            --bare \
+            --output-format stream-json \
+            --include-partial-messages \
+            --json-schema "${{ steps.plugin.outputs.root }}/schemas/synthesis.schema.json" \
             --allowedTools "WebSearch,WebFetch,Read,Grep,Glob,Agent,TodoWrite" \
-            > tab-output.json
+            > tab-stream.ndjson
 
       - name: Fail fast if TAB was demoted at plugin init
         run: |
           # Claude Code >= v2.1.111 emits `plugin_errors` in the init event
           # of `--output-format stream-json`. If TAB failed to load, every
           # downstream step is wasted tokens.
-          if jq -e '.plugin_errors[] | select(.plugin_name == "tech-advisory-board")' tab-output.json >/dev/null 2>&1; then
+          if jq -s -e 'map(select(.type=="init")) | .[0].plugin_errors[] | select(.plugin_name=="tech-advisory-board")' tab-stream.ndjson >/dev/null 2>&1; then
             echo "::error::TAB plugin was demoted at init. See plugin_errors."
-            jq '.plugin_errors[] | select(.plugin_name == "tech-advisory-board")' tab-output.json
+            jq -s 'map(select(.type=="init")) | .[0].plugin_errors[] | select(.plugin_name=="tech-advisory-board")' tab-stream.ndjson
             exit 1
           fi
 
@@ -103,14 +120,19 @@ jobs:
           echo "path=$SYNTH" >> "$GITHUB_OUTPUT"
 
       - name: Validate synthesis
+        # `--json-schema` above already enforces the schema on the assistant
+        # message; this step is a secondary defensive check against the
+        # synthesis.json file on disk (caught when the host writes after
+        # validation) — useful for schemas drift between the message stream
+        # and the final persisted file.
         run: |
-          "${CLAUDE_PLUGIN_ROOT:-$(claude plugin path tech-advisory-board)}/scripts/validate-synthesis-json.sh" \
+          "${{ steps.plugin.outputs.root }}/scripts/validate-synthesis-json.sh" \
             "${{ steps.synth.outputs.path }}"
 
       - name: Validate claims
         run: |
           SESSION=$(dirname "${{ steps.synth.outputs.path }}")
-          "${CLAUDE_PLUGIN_ROOT:-$(claude plugin path tech-advisory-board)}/scripts/validate-claims.sh" \
+          "${{ steps.plugin.outputs.root }}/scripts/validate-claims.sh" \
             --session "$SESSION"
 
       - name: Upload artifacts

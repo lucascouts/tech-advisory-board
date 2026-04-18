@@ -56,7 +56,7 @@ downstream auditors know.
 ```
 
 Effect: Champion / Auditor fall back to Sonnet. TAB still runs, but
-adversarial rigor drops — recommended only for Express / Quick / Standard
+adversarial rigor drops — recommended only for Instant / Fast / Standard
 sessions with a hard cost ceiling.
 
 ## 4. Cap spend

@@ -16,8 +16,8 @@ logged so consumers can audit cost.
 
 | Mode | Max queries per tool | Max total queries | Retry budget |
 |---|---|---|---|
-| Express | 2 | 5 | +1 |
-| Quick | 3 | 10 | +2 |
+| Instant | 2 | 5 | +1 |
+| Fast | 3 | 10 | +2 |
 | Standard | 3 | 20 | +6 |
 | Complete | 5 | 35 | +10 |
 | Complete+ | 7 | 50 | +15 |
@@ -169,11 +169,39 @@ Cache hits do NOT consume budget. Specifically:
 - A stale cache hit (30-180 days) is surfaced with `[cached, X days]`
   but also does not consume budget — the Moderator may elect to re-query
   fresh, which DOES consume budget
-- Cross-project shared cache (`${CLAUDE_PLUGIN_DATA}/shared-cache`) also
-  counts as cache, not a new query
+- Cross-project shared cache (`${CLAUDE_PLUGIN_DATA}/shared-cache/cache.json`,
+  scope `"shared"`) is checked after the per-session cache — hits there
+  also do not consume budget
 
 This means well-cached sessions may complete under budget while still
 producing high-confidence claims.
+
+### 7.1 Category TTL (shared cache only)
+
+Shared-cache entries carry a `category` with per-bucket freshness windows:
+
+| Category | TTL | Typical topics |
+|---|---|---|
+| `volatile` (default) | 7 days | JS frameworks, LLM/AI tooling, bleeding-edge runtimes |
+| `mature` | 30 days | Databases, languages, compilers, compilers, OS kernels |
+
+Writers set `category` and compute `expires_at = fetched_at + TTL`. Readers
+honor `expires_at` and the optional `invalidated_at` field. TTLs are
+overridable via `TAB_CACHE_TTL_VOLATILE_DAYS` / `TAB_CACHE_TTL_MATURE_DAYS`.
+
+### 7.2 `tab-cache` management
+
+```bash
+tab-cache list                       # show all shared entries with freshness
+tab-cache list --category volatile   # filter
+tab-cache stats                      # counts by freshness + category
+tab-cache invalidate "nextjs"        # manual eviction for a topic substring
+tab-cache prune                      # drop expired / invalidated entries
+tab-cache path                       # resolved cache file path
+```
+
+The per-session `research-cache.json` (scope `"session"`) is not managed by
+`tab-cache`; it is scoped to the session dir and discarded on archival.
 
 ## 8. Related documents
 

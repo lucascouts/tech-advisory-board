@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# tab-score-zscore — normalize advisor scores via per-advisor z-score before aggregation.
+#
+# Problem: advisors have individual drift (one is lenient 7-9, another is harsh 3-6).
+# Simple averages let the lenient advisor dominate. Z-score reveals each advisor's
+# *relative preference* across the options they scored.
+#
+# Input (stdin, JSON): {
+#   "matrix": [
+#     {"advisor": "A", "champion": "NextJS",     "score": 9},
+#     {"advisor": "A", "champion": "Remix",      "score": 8},
+#     {"advisor": "A", "champion": "Astro",      "score": 7},
+#     {"advisor": "B", "champion": "NextJS",     "score": 6},
+#     {"advisor": "B", "champion": "Remix",      "score": 5},
+#     {"advisor": "B", "champion": "Astro",      "score": 4}
+#   ]
+# }
+#
+# Output (stdout, JSON): {
+#   "normalized_matrix": [
+#     {"advisor": "A", "champion": "NextJS", "score_raw": 9, "score_z": 1.22},
+#     ...
+#   ],
+#   "ranking": [
+#     {"champion": "NextJS", "mean_z": 1.22},
+#     {"champion": "Remix",  "mean_z": 0.00},
+#     {"champion": "Astro",  "mean_z": -1.22}
+#   ]
+# }
+#
+# The Moderator can then feed `ranking[].mean_z` into the synthesis instead
+# of raw averages. Scores with σ = 0 (advisor gave identical scores across
+# all candidates) are skipped — they carry no differentiating signal.
+#
+# See skills/tab/references/debate-protocol.md §Score Consolidation.
+set -uo pipefail
+
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "python3 required" >&2
+    exit 1
+fi
+
+INPUT_FILE="$(mktemp)"
+trap 'rm -f "$INPUT_FILE"' EXIT
+cat > "$INPUT_FILE"
+
+exec python3 - "$INPUT_FILE" <<'PYEOF'
+import json, math, sys
+from collections import defaultdict
+
+with open(sys.argv[1]) as f:
+    payload = json.load(f)
+
+rows = payload.get("matrix") or []
+if not rows:
+    print(json.dumps({"normalized_matrix": [], "ranking": []}))
+    sys.exit(0)
+
+# group by advisor → list of (champion, score)
+per_advisor = defaultdict(list)
+for r in rows:
+    per_advisor[r["advisor"]].append((r["champion"], float(r["score"])))
+
+# compute z per (advisor, champion)
+z_rows = []
+skipped = []
+for advisor, pairs in per_advisor.items():
+    scores = [s for _, s in pairs]
+    n = len(scores)
+    mu = sum(scores) / n
+    var = sum((s - mu) ** 2 for s in scores) / n
+    sigma = math.sqrt(var)
+    if sigma == 0:
+        skipped.append(advisor)
+        continue
+    for champion, score in pairs:
+        z_rows.append({
+            "advisor": advisor,
+            "champion": champion,
+            "score_raw": score,
+            "score_z": round((score - mu) / sigma, 4),
+        })
+
+# aggregate by champion → mean z
+by_champion = defaultdict(list)
+for r in z_rows:
+    by_champion[r["champion"]].append(r["score_z"])
+
+ranking = [
+    {"champion": c, "mean_z": round(sum(vs) / len(vs), 4), "samples": len(vs)}
+    for c, vs in by_champion.items()
+]
+ranking.sort(key=lambda x: x["mean_z"], reverse=True)
+
+print(json.dumps({
+    "normalized_matrix": z_rows,
+    "ranking": ranking,
+    "skipped_advisors_zero_sigma": skipped,
+}, indent=2, ensure_ascii=False))
+PYEOF

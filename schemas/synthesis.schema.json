@@ -32,7 +32,7 @@
         "language": {"type": "string", "description": "IETF BCP 47 tag (e.g. pt-BR, en)."},
         "started_at": {"type": "string", "format": "date-time"},
         "completed_at": {"type": ["string", "null"], "format": "date-time"},
-        "mode": {"enum": ["Express", "Quick", "Standard", "Complete", "Complete+", "Rechallenge"]},
+        "mode": {"enum": ["Instant", "Fast", "Standard", "Complete", "Complete+", "Rechallenge"]},
         "complexity": {"enum": ["Trivial", "Simple", "Moderate", "High", "Very High"]}
       }
     },
@@ -153,7 +153,24 @@
               "advisor": {"type": "string"},
               "champion": {"type": "string"},
               "score": {"type": "integer", "minimum": 1, "maximum": 10},
+              "score_z": {
+                "type": "number",
+                "description": "Per-advisor z-score (computed by bin/tab-score-zscore). Optional — present only when normalization ran. See debate-protocol.md §Score Consolidation."
+              },
               "rationale_ref": {"type": "string"}
+            }
+          }
+        },
+        "ranking_z": {
+          "type": "array",
+          "description": "Champion ranking by mean z-score (advisor drift removed). Populated alongside matrix when z-score normalization ran.",
+          "items": {
+            "type": "object",
+            "required": ["champion", "mean_z"],
+            "properties": {
+              "champion": {"type": "string"},
+              "mean_z": {"type": "number"},
+              "samples": {"type": "integer", "minimum": 1}
             }
           }
         },
@@ -279,13 +296,55 @@
     },
     "adr_path": {
       "type": ["string", "null"],
-      "description": "Relative path to the MADR ADR for this decision. Null for Express/Quick modes where ADR generation is optional."
+      "description": "Relative path to the MADR ADR for this decision. Null for Instant/Fast modes where ADR generation is optional."
     },
     "consumable_hints": {
       "type": "object",
       "description": "Optional hints for external tools (task generators, dashboards).",
       "properties": {
         "task_generators": {"type": "object"}
+      }
+    },
+    "adoption_scaffold": {
+      "type": "object",
+      "description": "Operational contract around the chosen recommendation (§3.4.1 / synthesis-template §7). Required in Complete / Complete+.",
+      "properties": {
+        "migration_steps": {"type": "array", "items": {"type": "string"}},
+        "lock_in_risks": {"type": "array", "items": {"type": "string"}},
+        "operational_checklist": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["at", "metric"],
+            "properties": {
+              "at": {"type": "string", "description": "Relative timestamp, e.g. 'D+30', 'D+90'."},
+              "metric": {"type": "string"},
+              "action": {"type": "string"}
+            }
+          }
+        },
+        "integration_debt": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "sensitivity": {
+      "type": "object",
+      "description": "Decision sensitivity (§3.4.2 / synthesis-template §8). Required in Standard+.",
+      "properties": {
+        "thresholds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["dimension", "threshold", "effect"],
+            "properties": {
+              "dimension": {"type": "string"},
+              "threshold": {"type": "string"},
+              "effect": {"type": "string"}
+            }
+          }
+        },
+        "stable_dimensions": {"type": "array", "items": {"type": "string"}},
+        "fragile_dimensions": {"type": "array", "items": {"type": "string"}},
+        "fragile": {"type": "boolean", "description": "True when the primary recommendation sits near a fragile threshold."}
       }
     }
   },

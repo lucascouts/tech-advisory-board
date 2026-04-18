@@ -8,7 +8,14 @@
 # Usage:
 #   tab-schedule-rechallenge <adr-path> --every "<cron>" [--mode MODE]
 #                                       [--tab-dir DIR] [--record-task TASK_ID]
+#                                       [--activation native|loop-fallback]
 #                                       [--dry-run]
+# Activation:
+#   Schedule version 2 emits BOTH a `native_cron_spec` (for the CronCreate
+#   tool, Claude Code ≥ v2.1.72) and a `loop_fallback_prompt` (/loop
+#   string). Prefer native; fall back to /loop on hosts without Cron tools.
+#   After activation, call `--record-task <id> --activation native|loop-fallback`
+#   to freeze the path chosen.
 # Cron format (5 fields): minute hour day month day-of-week
 #   Wildcards (*), single values, steps (*/15), ranges (1-5), lists (1,15,30).
 #   Extended forms (L, W, ?, MON/JAN aliases) are NOT supported.
@@ -49,6 +56,7 @@ CRON=""
 MODE="quick"
 TAB_DIR=""
 RECORD_TASK=""
+ACTIVATION=""
 DRY_RUN=false
 
 while [[ $# -gt 0 ]]; do
@@ -57,6 +65,7 @@ while [[ $# -gt 0 ]]; do
         --mode)        MODE="$2"; shift ;;
         --tab-dir)     TAB_DIR="$2"; shift ;;
         --record-task) RECORD_TASK="$2"; shift ;;
+        --activation)  ACTIVATION="$2"; shift ;;
         --dry-run)     DRY_RUN=true ;;
         *) echo "Unknown flag: $1" >&2; exit 2 ;;
     esac
@@ -75,11 +84,11 @@ if grep -qE '^-\s*\*\*Status:\*\*\s*superseded-by:' "$ADR_PATH"; then
     exit 1
 fi
 
-python3 - "$ADR_PATH" "$CRON" "$MODE" "${TAB_DIR:-}" "$RECORD_TASK" "$DRY_RUN" <<'PYEOF'
+python3 - "$ADR_PATH" "$CRON" "$MODE" "${TAB_DIR:-}" "$RECORD_TASK" "${ACTIVATION:-}" "$DRY_RUN" <<'PYEOF'
 import json, os, re, sys
 from datetime import datetime, timezone
 
-(adr_path, cron, mode, tab_dir, record_task, dry_run) = sys.argv[1:7]
+(adr_path, cron, mode, tab_dir, record_task, activation, dry_run) = sys.argv[1:8]
 dry_run = dry_run == "true"
 
 schedule_path = adr_path.replace(".md", ".schedule.json")
@@ -94,10 +103,20 @@ if record_task:
     meta["task_id"] = record_task
     meta["activated_at"] = datetime.now(timezone.utc).isoformat()
     meta["active"] = True
+    if activation in ("native", "loop-fallback"):
+        meta["activation_path"] = activation
+    elif activation:
+        print(json.dumps({"error": f"--activation must be native|loop-fallback, got '{activation}'"}))
+        sys.exit(2)
     if not dry_run:
         with open(schedule_path, "w") as f:
             json.dump(meta, f, indent=2, ensure_ascii=False)
-    print(json.dumps({"recorded": True, "task_id": record_task, "path": schedule_path}, indent=2))
+    print(json.dumps({
+        "recorded": True,
+        "task_id": record_task,
+        "activation_path": meta.get("activation_path", "pending"),
+        "path": schedule_path,
+    }, indent=2))
     sys.exit(0)
 
 # ---- Fresh schedule creation ----
@@ -135,24 +154,48 @@ if not tab_dir:
             break
         p = parent
 
-# Compose the activation prompt the user will paste in an active session
+# Compose both activation paths:
+#  - native_cron_spec: envelope to pass to the CronCreate tool (CC ≥ v2.1.72).
+#    Preferred when the host supports native scheduling.
+#  - loop_fallback_prompt: /loop-skill string to paste when CronCreate is
+#    unavailable (Bedrock/Vertex without dynamic /loop still falls through
+#    to a manual reminder).
 skill = ("tech-advisory-board:rechallenge"
          if mode == "quick" else "tech-advisory-board:tab")
 rel_adr = os.path.relpath(adr_path, start=tab_dir or ".")
-activation_prompt = (f'/loop {cron} "/{skill} {adr_path}"' if mode == "quick"
-                     else f'/loop {cron} "/{skill} Re-evaluate decision in {adr_path}"')
+task_prompt = (f'/{skill} {adr_path}' if mode == "quick"
+               else f'/{skill} Re-evaluate decision in {adr_path}')
+
+native_cron_spec = {
+    "tool": "CronCreate",
+    "input": {
+        "schedule": cron,
+        "prompt": task_prompt,
+        "label": f"tab-rechallenge:{os.path.basename(adr_path)}",
+        "max_runs": None,              # recurring; host auto-expires after 7 days
+        "tags": ["tab", "rechallenge", mode],
+    },
+    "notes": "Recurring CronCreate tasks auto-expire after 7 days per host policy. "
+             "Session-level limit: 50 tasks. On expiry, SessionStart re-crons "
+             "schedules whose .schedule.json has active=true."
+}
+
+loop_fallback_prompt = f'/loop {cron} "{task_prompt}"'
 
 meta = {
-    "schedule_version": 1,
+    "schedule_version": 2,
     "adr_path": os.path.abspath(adr_path),
     "cron": cron,
     "mode": mode,
-    "activation_prompt": activation_prompt,
+    "task_prompt": task_prompt,
+    "native_cron_spec": native_cron_spec,
+    "loop_fallback_prompt": loop_fallback_prompt,
     "created_at": datetime.now(timezone.utc).isoformat(),
     "task_id": None,
     "active": False,
     "last_run": None,
     "failure_count": 0,
+    "activation_path": "pending",       # set to "native" or "loop-fallback" when --record-task fires
 }
 
 if not dry_run:
@@ -163,13 +206,12 @@ print(json.dumps({
     "metadata_written": not dry_run,
     "schedule_path": schedule_path,
     "metadata": meta,
-    "next_step": (
-        "Paste this prompt into an active Claude Code session to activate: "
-        + activation_prompt
-        + "\nThen run: tab-schedule-rechallenge "
-        + adr_path
-        + " --record-task <task-id-returned-by-/loop>"
-    ),
+    "activation_guidance": {
+        "preferred": "Moderator (or caller) invokes CronCreate with native_cron_spec.input, "
+                     "then calls `tab-schedule-rechallenge <adr> --record-task <task-id> --activation native`.",
+        "fallback":  "If CronCreate is unavailable, paste the loop_fallback_prompt into an active session, "
+                     "capture the /loop task id, and call `--record-task <id> --activation loop-fallback`.",
+    },
     "notes": [
         "Recurring cron tasks auto-expire after 7 days in the host.",
         "SessionStart hook may be configured to re-cron expired schedules "

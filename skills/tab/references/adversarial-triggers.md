@@ -187,8 +187,8 @@ be downgraded but never upgraded by this round.
 
 | Mode | Concession monitor | Supervisor | Wildcard | Auditor |
 |---|---|---|---|---|
-| Express | — | — | — | — |
-| Quick | — | — | on-trigger | — |
+| Instant | — | — | — | — |
+| Fast | — | — | on-trigger | — |
 | Standard | on-trigger | on-trigger | on-trigger | on-trigger |
 | Complete | on-trigger | on-trigger | on-trigger | **mandatory** |
 | Complete+ | on-trigger | on-trigger | on-trigger | **mandatory + rebuttal** |

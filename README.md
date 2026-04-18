@@ -36,17 +36,26 @@ Backed by current web research via MCPs (perplexity, context7, brave-search), ev
 
 All agents are invoked as parallel subagents via `subagent_type: "tech-advisory-board:<name>"` in the Agent tool.
 
-### Hooks (8 events)
+### Hooks (17 events)
 
 | Event | Script | Purpose |
 |---|---|---|
 | `SessionStart` | `scripts/detect-interrupted.sh` | Detect resumable TAB sessions, emit resume hint |
 | `UserPromptSubmit` | `scripts/inject-tab-context.sh` | Inject auto-detected project context on TAB-intent prompts |
 | `PreCompact` | `scripts/flush-state.sh` | Force state persistence before context reclaim |
-| `PostCompact` | `scripts/rehydrate-state.sh` | Re-inject phase / mode / claims digest after compaction |
+| `PostCompact` | `scripts/rehydrate-state.sh` | Re-inject phase / mode / claims digest + `session_language` after compaction |
 | `PostToolUse` (Write TAB/sessions/**) | `scripts/update-telemetry.sh` | Track artifact writes into telemetry.json |
+| `TaskCreated` | `scripts/on-task-created.sh` | Record subagent spawn timing into `state-full.json` |
+| `SubagentStart` | `scripts/on-subagent-start.sh` | Native start pair of `SubagentStop` — exact wall-clock timing for the timeline Gantt |
 | `SubagentStop` | `scripts/update-telemetry-subagent.sh` | Native subagent lifecycle → telemetry + state-full |
 | `Stop` | `scripts/validate-on-stop.sh` | Gate session close on `validate-synthesis-json.sh` + `validate-claims.sh` |
+| `StopFailure` | `scripts/on-stop-failure.sh` | Capture Stop-gate failures for retry / debugging |
+| `CwdChanged` | `scripts/on-reactive-change.sh` | Detect workspace switch mid-session |
+| `FileChanged` (`TAB/**`) | `scripts/on-reactive-change.sh` | React to external ADR / synthesis edits |
+| `InstructionsLoaded` (`session_start`, `compact`) | `scripts/on-instructions-loaded.sh` | Re-inject locked `session_language` on re-hydration and CLAUDE.md changes |
+| `Elicitation` | `scripts/on-elicitation.sh` | Record every `AskUserQuestion` round into `telemetry.json.elicitations[]` (discard-triage instrumentation) |
+| `ElicitationResult` | `scripts/on-elicitation.sh` | Same script; captures the user's answer metadata |
+| `PermissionDenied` | `scripts/on-permission-denied.sh` | Append blocked tools to `<session>/denials.ndjson` for auto-mode policy tuning |
 | `SessionEnd` | `scripts/archive-idle-sessions.sh` | Redundant archival safety net |
 
 ### Bin commands (auto-added to PATH when plugin is active)
@@ -54,12 +63,17 @@ All agents are invoked as parallel subagents via `subagent_type: "tech-advisory-
 | Command | Purpose |
 |---|---|
 | `tab-init-dir` | Lazy init of project's `TAB/` directory (idempotent) |
+| `tab-check-mcps` | Diagnose MCP availability (perplexity, context7, brave-search) |
 | `tab-resume-session` | Scan for resumable sessions, emit JSON payload |
 | `tab-compute-cost` | USD cost computation from telemetry or ad-hoc |
 | `tab-new-adr` | MADR generator from `synthesis.json` |
 | `tab-supersede-adr` | Link ADR pairs (supersede / revision modes) |
 | `tab-vanguard-timeline` | Cross-project Vanguard maturity ledger |
 | `tab-schedule-rechallenge` | Prepare scheduled rechallenge per ADR |
+| `tab-cache` | Manage the cross-session research cache (list / invalidate / prune) |
+| `tab-score-zscore` | Normalize the advisor score matrix via per-advisor z-score before ranking |
+| `tab-record-outcome` | Update an ADR's `outcome:` frontmatter block (status / measured_at / predicted vs actual / lessons) |
+| `tab-open-timeline` | Render + open the session timeline HTML in the browser (self-contained, reads `timeline-events.ndjson`) |
 
 ### Scripts (lifecycle helpers)
 
@@ -72,7 +86,7 @@ Draft 2020-12 JSON Schemas for `TAB/config.json`, `state.json`, `state-full.json
 ### Other
 
 - `settings.json`: wires `subagentStatusLine` to `scripts/statusline.sh`.
-- `evals/evals.json`: 47 test cases + 3 project fixtures (simple-node-api, python-cli, messy-project).
+- `evals/evals.json`: 54 test cases (48 happy-path + 6 failure-mode: MCP down, budget burst, Opus unavailable, python3 absent, forced compaction, concurrent ADR writes) + 3 project fixtures (simple-node-api, python-cli, messy-project).
 - 15 reference documents under `skills/tab/references/` (archetypes, specialists, debate protocol, intent detection, stage definitions, synthesis template, synthesis schema, context extraction, output examples, confidence tags, adversarial triggers, research budget, persistence protocol, hooks catalog, automation, flow-and-modes).
 - 1 reference under `skills/rechallenge/references/` (rechallenge protocol).
 
@@ -155,8 +169,8 @@ The board will:
 
 | Flag | Example | Mode |
 |---|---|---|
-| Trivial | "Ruff or Black?" | Express (direct answer) |
-| Simple | "Which ORM for Postgres?" | Quick (2 Champions) |
+| Trivial | "Ruff or Black?" | Instant (direct answer) |
+| Simple | "Which ORM for Postgres?" | Fast (2 Champions) |
 | Moderate | "Backend for real-time REST API" | Standard (3 Champions + 3-4 Advisors) |
 | High | "Full stack for multi-tenant SaaS" | Complete (full flow + mandatory Auditor) |
 | Very High+ | "Monolith → microservices, zero downtime" | Complete+ (extended flow) |
@@ -172,7 +186,7 @@ Prompted at plugin-enable time (stored in your user / project settings; the `sen
 | `max_cost_per_session_usd` | 5.00 | Hard budget ceiling (aborts session on breach) |
 | `warn_at_usd` | 3.00 | Soft warning threshold |
 | `language_preference` | *(unset)* | BCP 47 tag used when first message is ambiguous |
-| `default_mode` | *(unset)* | Preferred mode when classifier is ambiguous (Express / Quick / Standard / Complete / Complete+) |
+| `default_mode` | *(unset)* | Preferred mode when classifier is ambiguous (Instant / Fast / Standard / Complete / Complete+; legacy `Express`/`Quick` accepted for one version) |
 | `auditor_enabled` | true | Run Auditor in Complete / Complete+ / Rechallenge |
 | `supervisor_gate_enabled` | true | Fire Supervisor on §12.1 triggers |
 | `adr_dir_override` | *(unset)* | Override the default `TAB/decisions/` directory |

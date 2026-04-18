@@ -19,8 +19,8 @@ After context extraction, classify the **complexity** of the decision:
 
 | Flag | Example | Mode |
 |------|---------|------|
-| **Trivial** | "Which formatter should I use with Python?" | Express |
-| **Simple** | "Which ORM should I use with Postgres in Node?" | Quick |
+| **Trivial** | "Which formatter should I use with Python?" | Instant |
+| **Simple** | "Which ORM should I use with Postgres in Node?" | Fast |
 | **Moderate** | "Backend framework for a REST API with real-time" | Standard |
 | **High** | "Full stack for a multi-tenant SaaS" | Complete |
 | **Very High+** | "Monolith to microservices migration with zero downtime" | Complete+ |
@@ -36,19 +36,21 @@ ambiguous between two modes, prefer the configured default.
 
 ## Session Modes
 
-### Express `[Trivial]`
+### Instant `[Trivial]`
 - Scout shortlist (2-3 items) + discard table
 - Moderator direct recommendation
 - No Champions, no debate, no Advisors, no Auditor, no Supervisor
-- Validation: manual review recommended (Express output is too compact
+- Validation: manual review recommended (Instant output is too compact
   for reliable `validate-synthesis.sh` pattern matching)
+- Legacy alias: `Express` (accepted for one version, deprecated in 0.3)
 
-### Quick `[Simple]`
+### Fast `[Simple]`
 - Scout shortlist + discard table
 - 2 Champions (no mandatory Vanguard), condensed presentations
 - 2 Advisors, direct comparative verdict
 - No cross-examination
 - No Auditor, no Supervisor
+- Legacy alias: `Quick` (accepted for one version, deprecated in 0.3)
 
 ### Standard `[Moderate]`
 - Full flow with 3 Champions (2 Established + 1 Vanguard) + 3-4 Advisors
@@ -149,7 +151,7 @@ SYNTHESIS + ADR offer  (auto-generated in Standard+)
 
 ## Phase-to-Mode matrix
 
-| Phase | Express | Quick | Standard | Complete | Complete+ | Rechallenge |
+| Phase | Instant | Fast | Standard | Complete | Complete+ | Rechallenge |
 |---|---|---|---|---|---|---|
 | Bootstrap (-1) | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | Context extraction | ✓ | ✓ | ✓ | ✓ | ✓ | skip |

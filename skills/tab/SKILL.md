@@ -121,11 +121,19 @@ Quick reference:
 
 | Flag | Mode | Champions | Advisors | Cross-exam | Auditor |
 |---|---|---|---|---|---|
-| Trivial | Express | 0 | 0 | — | — |
-| Simple | Quick | 2 | 2 | — | — |
+| Trivial | Instant | 0 | 0 | — | — |
+| Simple | Fast | 2 | 2 | — | — |
 | Moderate | Standard | 3 | 3-4 | 1 round (A) | conditional |
 | High | Complete | 3-4 | 4-5 | multi (B) | **required** |
 | Very High+ | Complete+ | 4-5 | 5-6 | multi (B) | **required** |
+
+**Model selection.** Before spawning any subagent, consult
+`references/model-policy.md` when `userConfig.model_policy != "static"`.
+`scripts/model-policy.sh` accepts a role + mode + signals envelope and
+returns the resolved model. Defaults: Champion / Auditor pinned to Opus,
+Advisor / Researcher / Supervisor to Sonnet. `budget-aware` (default)
+downgrades when <30% of the cost ceiling remains; `context-aware` adds
+cache-hit / MCP / novelty / prompt-cache / stakes signals.
 
 Announce classification in the user's language. The user can override at
 any point. If `userConfig.default_mode` is set and the classifier is
@@ -164,6 +172,25 @@ or randomly generated name per session.
    - Mid-session: 2-3 questions about divergent champion assumptions
    Read `references/debate-protocol.md` for format, Elicitation hooks, and
    batch-mode `PreToolUse` / `updatedInput` semantics.
+
+5.5. **Triage reinforcement** — After the Scout's provisional shortlist + discard
+   table is produced, run the three reinforcement steps from
+   `references/triage-protocol.md`:
+   1. **Discard triage questions** — 2-4 targeted `AskUserQuestion` prompts
+      asking whether each discard criterion is genuinely blocking. Reversals
+      append to `state-full.json.landscape.discard_reversals[]` and the
+      candidate returns to the shortlist.
+   2. **Adversarial premise check** — a narrow auditor invocation
+      (`Complete` / `Complete+`) or inline pass (`Standard`) that lists
+      the 3 most-likely-wrong premises in the context envelope, with
+      evidence for and against. `risk_level: high` + `resolution_needed:
+      true` halts Phase 3 until clarified.
+   3. **Steel-man of the best discard** — exactly one champion is spawned
+      with `role: steel-man` to deliver a ≤300-word defense of the
+      highest-ranked discarded option. The result either reinstates the
+      option or annotates the discard as `steel_man_reviewed: true`.
+   Every step writes a record to `telemetry.json.triage[]`. `Instant` /
+   `Fast` run only step 2 inline; the rest are `Standard`-and-up.
 
 6. **Champion Invocation** — Read `references/archetypes.md` to select archetypes.
    Generate identity cards with random names, real credentials, declared bias/blind
@@ -241,7 +268,7 @@ or randomly generated name per session.
       which writes `TAB/decisions/NNNN-<slug>.md` (MADR) and updates
       `TAB/index.md`. The returned path is stored in
       `synthesis.json.adr_path`
-    - For Express/Quick, ADR is optional — offer it; skip if declined.
+    - For Instant/Fast, ADR is optional — offer it; skip if declined.
 
 **Moderator Rules:**
 - Never let a specialist make claims without justification
@@ -318,7 +345,7 @@ Champions MUST NOT hedge their core proposal. Self-critique in weaknesses only.
 ### Presentation Structure
 Champions follow the 4-section format (+ Vanguard extras) defined in the native
 `champion` subagent. In Standard/Complete/Complete+ mode, invoke via
-`subagent_type: "tech-advisory-board:champion"` in parallel. In Quick mode, present in main context.
+`subagent_type: "tech-advisory-board:champion"` in parallel. In Fast mode, present in main context.
 
 ---
 
@@ -364,7 +391,7 @@ Champions follow the 4-section format (+ Vanguard extras) defined in the native
 - Synthesis = current stage + next stage requirements + evolution roadmap
 
 ### Sub-Component Decisions ("which ORM?", "which cache layer?")
-- Classify as Simple/Trivial, use Express or Quick mode
+- Classify as Simple/Trivial, use Instant or Fast mode
 
 ### Architecture Decisions ("microservices vs monolith?")
 - Structural decisions, not tool selections
@@ -414,9 +441,10 @@ active subagent count during long sessions.
    `state-full.json` preserves every quantitative claim so recovery via
    `tab-resume-session` can reconstruct the debate. Use `TodoWrite` in
    parallel to keep the user-visible progress trail intact.
-4. **Express mode skips validation.** The `validate-synthesis.sh` script checks
-   section presence but Express mode output is too compact for reliable pattern
-   matching. Manual review recommended for Express.
+4. **Instant mode skips validation.** The `validate-synthesis.sh` script checks
+   section presence but Instant mode output is too compact for reliable pattern
+   matching. Manual review recommended for Instant. Legacy `Express` input is
+   normalized to `Instant` by `scripts/normalize-mode.sh` (see §3.1.1 migration).
 
 ---
 

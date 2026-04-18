@@ -103,6 +103,25 @@ claim made in a session is appended — champions, advisors, researcher,
 auditor, even user-supplied facts. See  for the
 per-entry schema.
 
+### 3.3 Language lock (`session_language`, §3.5.3)
+
+During Phase 1 (context extraction), the Moderator detects the user's
+language and **LOCKS** it by writing `state-full.json.session_language`
+as an IETF BCP 47 tag (`en`, `pt-BR`, etc.). Downstream:
+
+- The `PostCompact` hook (`scripts/rehydrate-state.sh`) reads it and
+  re-surfaces it in the digest so compaction can't dilute it.
+- The `InstructionsLoaded` hook (`scripts/on-instructions-loaded.sh`,
+  matchers `session_start` + `compact`) re-injects it whenever
+  instructions reload — covering `/resume`, CLAUDE.md edits, and
+  nested-traversal contexts.
+- Champions / Advisors / Auditor inherit the value through their
+  `initialPrompt` envelope (Claude Code ≥ v2.1.83) or the context digest.
+
+**Never re-detect mid-session.** If the user switches language
+(common in pt/en tech chats), the Moderator emits an `AskUserQuestion`
+to confirm before changing the locked value; silent drift is prohibited.
+
 ---
 
 ## 4. Telemetry — write points

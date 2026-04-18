@@ -1,6 +1,6 @@
 {
   "name": "tech-advisory-board",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Multi-agent advisory board for technical decisions — stack selection, architecture choices, framework/database comparisons, project planning. Champions debate, Advisors evaluate, Scout maps landscape. Backed by current web research via MCPs (perplexity, context7, brave-search).",
   "author": {
     "name": "lucascouts",
@@ -29,13 +29,6 @@
     "./skills/tab",
     "./skills/rechallenge"
   ],
-  "monitors": [
-    {
-      "name": "tab-session-monitor",
-      "description": "Streams JSON-line events as TAB sessions advance: phase transitions, subagent start/return, budget thresholds.",
-      "command": "${CLAUDE_PLUGIN_ROOT}/scripts/monitor.sh"
-    }
-  ],
   "userConfig": {
     "max_cost_per_session_usd": {
       "title": "Max cost per session (USD)",
@@ -59,7 +52,7 @@
     },
     "default_mode": {
       "title": "Default session mode",
-      "description": "Mode used when the Moderator's complexity classification is ambiguous. One of Express, Quick, Standard, Complete, Complete+. Leave unset to let the Moderator classify automatically.",
+      "description": "Mode used when the Moderator's complexity classification is ambiguous. One of Instant, Fast, Standard, Complete, Complete+ (legacy aliases Express, Quick accepted one version — deprecated in 0.3). Leave unset to let the Moderator classify automatically.",
       "type": "string",
       "sensitive": false
     },
@@ -98,6 +91,19 @@
     "advisor_model": {
       "title": "Advisor agent model override",
       "description": "Override the model used by the Advisor subagents. Defaults to sonnet. Pinning opus raises cost meaningfully because N advisors run in parallel.",
+      "type": "string",
+      "sensitive": false
+    },
+    "model_policy": {
+      "title": "Model selection policy",
+      "description": "How the Moderator picks a model for each subagent spawn. 'static' honors only the *_model knobs. 'budget-aware' downgrades Champion/Auditor toward Sonnet when <30% of the cost ceiling remains. 'context-aware' additionally reacts to cache-hit rate, MCP availability, novelty vs vanguard-timeline, and prompt-cache warmth (see skills/tab/references/model-policy.md).",
+      "type": "string",
+      "sensitive": false,
+      "default": "budget-aware"
+    },
+    "model_policy_overrides": {
+      "title": "Per-mode model overrides",
+      "description": "Optional JSON object mapping canonical mode names to model IDs, e.g. {\"Instant\":\"haiku\",\"Fast\":\"sonnet\",\"Complete\":\"opus\"}. Applied after the policy engine; wins over the engine's recommendation. Empty string = no per-mode overrides.",
       "type": "string",
       "sensitive": false
     }

@@ -1,0 +1,181 @@
+#!/usr/bin/env bash
+# tab-cache — manage the TAB cross-session research cache.
+#
+# Location: ${CLAUDE_PLUGIN_DATA:-$HOME/.claude/plugins/data/tech-advisory-board}/shared-cache/cache.json
+# Schema:   schemas/research-cache.schema.json (scope="shared")
+#
+# Subcommands:
+#   tab-cache list [--category volatile|mature] [--json]
+#       Show entries with their freshness status (fresh | stale | expired).
+#   tab-cache invalidate <topic-substring>
+#       Set `invalidated_at` on every entry whose query_normalized contains the
+#       substring. Does NOT delete — keeps the record auditable.
+#   tab-cache prune
+#       Remove entries whose invalidated_at is set OR expires_at is past. Safe
+#       to run periodically.
+#   tab-cache path
+#       Print the resolved cache path (useful for hooks / scripts).
+#   tab-cache stats
+#       Emit counts by scope + category + freshness.
+#
+# TTL:
+#   volatile: 7  days  (JS, AI, LLM ecosystems — default when unset)
+#   mature:   30 days  (DBs, languages, compilers)
+# Overridable via TAB_CACHE_TTL_VOLATILE_DAYS / TAB_CACHE_TTL_MATURE_DAYS.
+set -uo pipefail
+
+PLUGIN_DATA="${CLAUDE_PLUGIN_DATA:-$HOME/.claude/plugins/data/tech-advisory-board}"
+CACHE_DIR="$PLUGIN_DATA/shared-cache"
+CACHE_FILE="$CACHE_DIR/cache.json"
+
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "python3 required" >&2
+    exit 1
+fi
+
+mkdir -p "$CACHE_DIR"
+if [[ ! -f "$CACHE_FILE" ]]; then
+    cat >"$CACHE_FILE" <<'JSON'
+{"cache_version": 1, "scope": "shared", "entries": {}}
+JSON
+fi
+
+CMD="${1:-help}"
+shift || true
+
+case "$CMD" in
+    path)
+        printf '%s\n' "$CACHE_FILE"
+        ;;
+    list|stats|invalidate|prune)
+        exec python3 - "$CACHE_FILE" "$CMD" "$@" <<'PYEOF'
+import json, os, sys
+from datetime import datetime, timezone, timedelta
+
+path, cmd, *rest = sys.argv[1:]
+
+VOLATILE = int(os.environ.get("TAB_CACHE_TTL_VOLATILE_DAYS", "7"))
+MATURE   = int(os.environ.get("TAB_CACHE_TTL_MATURE_DAYS", "30"))
+
+def parse_ts(s):
+    if not s:
+        return None
+    try:
+        return datetime.fromisoformat(s.replace("Z", "+00:00"))
+    except Exception:
+        return None
+
+def freshness(entry, now):
+    if entry.get("invalidated_at"):
+        return "invalidated"
+    expires_at = parse_ts(entry.get("expires_at"))
+    if expires_at is None:
+        fetched = parse_ts(entry.get("fetched_at"))
+        if fetched is None:
+            return "unknown"
+        ttl = VOLATILE if entry.get("category") != "mature" else MATURE
+        expires_at = fetched + timedelta(days=ttl)
+    if now >= expires_at:
+        return "expired"
+    if now >= expires_at - timedelta(days=2):
+        return "stale"
+    return "fresh"
+
+with open(path) as f:
+    cache = json.load(f)
+
+entries = cache.get("entries") or {}
+now = datetime.now(timezone.utc)
+
+if cmd == "list":
+    want_json = "--json" in rest
+    category_filter = None
+    for i, arg in enumerate(rest):
+        if arg == "--category" and i + 1 < len(rest):
+            category_filter = rest[i + 1]
+    rows = []
+    for key, entry in entries.items():
+        if category_filter and entry.get("category") != category_filter:
+            continue
+        rows.append({
+            "key": key[:12],
+            "tool": entry.get("tool"),
+            "query": (entry.get("query_normalized") or "")[:80],
+            "category": entry.get("category") or "volatile",
+            "fetched_at": entry.get("fetched_at"),
+            "freshness": freshness(entry, now),
+        })
+    if want_json:
+        print(json.dumps(rows, indent=2))
+    else:
+        if not rows:
+            print("(empty)")
+        else:
+            for r in rows:
+                print(f"{r['key']}  [{r['freshness']:11}] {r['category']:8} {r['tool']:14} {r['query']}")
+    sys.exit(0)
+
+if cmd == "stats":
+    by_freshness = {}
+    by_category = {}
+    for entry in entries.values():
+        f = freshness(entry, now)
+        by_freshness[f] = by_freshness.get(f, 0) + 1
+        c = entry.get("category") or "volatile"
+        by_category[c] = by_category.get(c, 0) + 1
+    print(json.dumps({
+        "path": path,
+        "scope": cache.get("scope", "shared"),
+        "total_entries": len(entries),
+        "by_freshness": by_freshness,
+        "by_category": by_category,
+        "ttl_volatile_days": VOLATILE,
+        "ttl_mature_days": MATURE,
+    }, indent=2))
+    sys.exit(0)
+
+if cmd == "invalidate":
+    if not rest:
+        print("Usage: tab-cache invalidate <topic-substring>", file=sys.stderr)
+        sys.exit(2)
+    topic = rest[0].lower()
+    now_iso = now.isoformat().replace("+00:00", "Z")
+    changed = 0
+    for entry in entries.values():
+        qn = (entry.get("query_normalized") or "").lower()
+        qr = (entry.get("query_raw") or "").lower()
+        if topic in qn or topic in qr:
+            entry["invalidated_at"] = now_iso
+            changed += 1
+    with open(path, "w") as f:
+        json.dump(cache, f, indent=2, ensure_ascii=False)
+    print(json.dumps({"invalidated": changed, "topic": rest[0]}))
+    sys.exit(0)
+
+if cmd == "prune":
+    before = len(entries)
+    keep = {}
+    for k, e in entries.items():
+        if e.get("invalidated_at"):
+            continue
+        if freshness(e, now) == "expired":
+            continue
+        keep[k] = e
+    cache["entries"] = keep
+    with open(path, "w") as f:
+        json.dump(cache, f, indent=2, ensure_ascii=False)
+    print(json.dumps({"pruned": before - len(keep), "remaining": len(keep)}))
+    sys.exit(0)
+
+print(f"Unknown subcommand: {cmd}", file=sys.stderr)
+sys.exit(2)
+PYEOF
+        ;;
+    help|-h|--help|"")
+        sed -n '2,24p' "$0" | sed 's/^# \?//'
+        ;;
+    *)
+        echo "Unknown subcommand: $CMD (try --help)" >&2
+        exit 2
+        ;;
+esac

@@ -1,0 +1,9 @@
+{
+  "monitors": [
+    {
+      "name": "tab-session-monitor",
+      "description": "Streams JSON-line events as TAB sessions advance: phase transitions, subagent start/return, budget thresholds.",
+      "command": "${CLAUDE_PLUGIN_ROOT}/scripts/monitor.sh"
+    }
+  ]
+}
