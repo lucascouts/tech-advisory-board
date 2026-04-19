@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+_No changes yet._
+
+## [0.1.2] — 2026-04-19
+
+### Fixed
+
+- `monitors/monitors.json`: change the root from an object
+  (`{"monitors": [...]}`) to a bare array (`[...]`). Claude Code's plugin
+  loader validates this file against a top-level array schema and rejected
+  the previous shape at install time with
+  `expected: array, received: object`, preventing monitors from loading.
+
 ## [0.1.1] — 2026-04-19
 
 ### Fixed
@@ -142,6 +154,7 @@ architecture choices, framework/database comparisons, project planning).
 
 MIT — see [LICENSE](./LICENSE).
 
-[Unreleased]: https://github.com/lucascouts/tech-advisory-board/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/lucascouts/tech-advisory-board/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/lucascouts/tech-advisory-board/releases/tag/v0.1.2
 [0.1.1]: https://github.com/lucascouts/tech-advisory-board/releases/tag/v0.1.1
 [0.1.0]: https://github.com/lucascouts/tech-advisory-board/releases/tag/v0.1.0

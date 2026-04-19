@@ -256,6 +256,8 @@ claude plugin validate .
 
 Inspect the schemas under `schemas/` when modifying `state*.json`, `synthesis.json`, `telemetry.json`, `research-cache.json`, `vanguard-timeline.json`, or `.tab/config.json`.
 
+---
+
 ## Contributing
 
 See [`ARCHITECTURE.md`](./ARCHITECTURE.md) for the maintainer-facing
@@ -272,4 +274,4 @@ MIT — see [LICENSE](./LICENSE).
 
 ## Version
 
-0.1.1 — see [CHANGELOG](./CHANGELOG.md).
+0.1.2 — see [CHANGELOG](./CHANGELOG.md).

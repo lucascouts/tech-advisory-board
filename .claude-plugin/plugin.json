@@ -1,6 +1,6 @@
 {
   "name": "tech-advisory-board",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Multi-agent advisory board for technical decisions \u2014 stack selection, architecture choices, framework/database comparisons, project planning. Champions debate, Advisors evaluate, Scout maps landscape. Backed by current web research via MCPs (perplexity, context7, brave-search).",
   "author": {
     "name": "lucascouts",
