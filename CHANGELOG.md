@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] — 2026-04-19
+
+### Fixed
+
+- `.claude-plugin/plugin.json`: remove the unsupported `enum` key from the
+  `agent_team_mode` userConfig entry. Claude Code's plugin manifest schema
+  does not recognize `enum` on userConfig fields and rejects the manifest
+  at load time with `Unrecognized key: "enum"`. The list of allowed values
+  (`subagents`, `agent_teams`, `auto`) is preserved in the `description`
+  field; runtime validation continues to live in the tab skill.
+
 ## [0.1.0] — 2026-04-19
 
 Initial public release of the **tech-advisory-board** Claude Code plugin —
@@ -129,4 +140,5 @@ architecture choices, framework/database comparisons, project planning).
 
 MIT — see [LICENSE](./LICENSE).
 
+[0.1.1]: https://github.com/lucascouts/tech-advisory-board/releases/tag/v0.1.1
 [0.1.0]: https://github.com/lucascouts/tech-advisory-board/releases/tag/0.1.0
