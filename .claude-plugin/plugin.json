@@ -151,13 +151,8 @@
     },
     "agent_team_mode": {
       "title": "Execution mode for Complete / Complete+ cross-examination",
-      "description": "Execution backend for parallel champion cross-examination in Complete/Complete+. 'subagents' (default, STABLE) = simulated fan-out via the Agent tool. 'agent_teams' = real multi-agent via Claude Code Agent Teams, which remains EXPERIMENTAL per Anthropic docs (requires CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1; ~2-3x base tokens; API may change between minor versions — pin your CC baseline). 'auto' = prefer Agent Teams when the env var is set, fall back to subagents silently otherwise. See skills/tab/references/agent-teams-mode.md.",
+      "description": "Execution backend for parallel champion cross-examination in Complete/Complete+. Allowed values: 'subagents' (default, STABLE) = simulated fan-out via the Agent tool; 'agent_teams' = real multi-agent via Claude Code Agent Teams, which remains EXPERIMENTAL per Anthropic docs (requires CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1; ~2-3x base tokens; API may change between minor versions — pin your CC baseline); 'auto' = prefer Agent Teams when the env var is set, fall back to subagents silently otherwise. See skills/tab/references/agent-teams-mode.md.",
       "type": "string",
-      "enum": [
-        "subagents",
-        "agent_teams",
-        "auto"
-      ],
       "default": "subagents",
       "sensitive": false
     }
