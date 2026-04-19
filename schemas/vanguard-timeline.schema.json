@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tech-advisory-board/vanguard-timeline.schema.json",
+  "title": "TAB Vanguard Maturity Timeline",
+  "description": "Cross-project tracking of bleeding-edge technologies. Lives at ${CLAUDE_PLUGIN_DATA}/vanguard-timeline.json. Finalized in Block 5b.",
+  "type": "object",
+  "properties": {
+    "schema_version": {"type": "integer", "const": 1},
+    "technologies": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {"type": "string"},
+          "first_assessed": {"type": "string", "format": "date"},
+          "last_assessed": {"type": "string", "format": "date"},
+          "assessments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "date": {"type": "string", "format": "date"},
+                "session_ref": {"type": "string"},
+                "verdict": {"enum": ["production-ready", "near-ready", "experimental"]},
+                "maturity_estimate_months": {"type": "integer"},
+                "blockers": {"type": "array", "items": {"type": "string"}}
+              },
+              "required": ["date", "verdict"]
+            }
+          },
+          "adoption_triggers": {"type": "array", "items": {"type": "string"}}
+        },
+        "required": ["name", "first_assessed", "last_assessed", "assessments"]
+      }
+    }
+  },
+  "required": ["schema_version", "technologies"]
+}

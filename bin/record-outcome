@@ -1,0 +1,167 @@
+#!/usr/bin/env bash
+# record-outcome — fill in the outcome block of an ADR's YAML frontmatter.
+#
+# ADRs produced by `new-adr` carry an `outcome:` block (status=pending).
+# This command updates that block in place with the real outcome measured
+# downstream (during rechallenge or manually).
+#
+# Usage:
+#   record-outcome <adr-path> --status success|pivot|abandon|pending \
+#       [--measured-at YYYY-MM-DD]                    \
+#       [--predicted KEY=VALUE ... --actual KEY=VALUE ...] \
+#       [--variance-reason "text" ]                   \
+#       [--lesson "text"] [--lesson "..."]            \
+#       [--dry-run]
+#
+# Examples:
+#   record-outcome .tab/decisions/0007-next-js-adoption.md \
+#       --status success --measured-at 2026-09-17 \
+#       --lesson "ISR saved 30% infra cost vs expected"
+#
+#   record-outcome .tab/decisions/0003-database-selection.md \
+#       --status pivot --measured-at 2026-07-02 \
+#       --predicted time-to-market="3 months" \
+#       --actual    time-to-market="5 months" \
+#       --variance-reason "team onboarding was underestimated" \
+#       --lesson "Stack X had a steeper learning curve than championed"
+#
+# Consumers:
+#   - rechallenge skill reads outcome to weight the prior decision
+#   - vanguard-timeline aggregates success/pivot/abandon over stacks
+#   - Future champions receive the record as counter-evidence
+#
+# Exit 0 on write. Non-zero on parse / file errors.
+set -uo pipefail
+
+usage() {
+    sed -n '2,32p' "$0" | sed 's/^# \?//'
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" || -z "${1:-}" ]]; then
+    usage
+    exit 0
+fi
+
+ADR_PATH="${1:-}"
+shift
+
+if [[ ! -f "$ADR_PATH" ]]; then
+    echo "ADR not found: $ADR_PATH" >&2
+    exit 1
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "python3 required" >&2
+    exit 1
+fi
+
+# We pass all flags through to python as-is.
+exec python3 - "$ADR_PATH" "$@" <<'PYEOF'
+import sys, re, os
+from datetime import datetime
+
+adr_path = sys.argv[1]
+args = sys.argv[2:]
+
+status = None
+measured_at = None
+predicted = {}
+actual = {}
+variance_reason = None
+lessons = []
+dry_run = False
+
+it = iter(args)
+for a in it:
+    if a == "--status":
+        status = next(it)
+    elif a == "--measured-at":
+        measured_at = next(it)
+    elif a == "--predicted":
+        kv = next(it)
+        if "=" not in kv:
+            print(f"--predicted expects KEY=VALUE, got {kv!r}", file=sys.stderr); sys.exit(2)
+        k, v = kv.split("=", 1); predicted[k] = v
+    elif a == "--actual":
+        kv = next(it)
+        if "=" not in kv:
+            print(f"--actual expects KEY=VALUE, got {kv!r}", file=sys.stderr); sys.exit(2)
+        k, v = kv.split("=", 1); actual[k] = v
+    elif a == "--variance-reason":
+        variance_reason = next(it)
+    elif a == "--lesson":
+        lessons.append(next(it))
+    elif a == "--dry-run":
+        dry_run = True
+    else:
+        print(f"Unknown flag: {a}", file=sys.stderr); sys.exit(2)
+
+if status not in {"success", "pivot", "abandon", "pending"}:
+    print(f"--status must be one of success|pivot|abandon|pending (got {status!r})", file=sys.stderr)
+    sys.exit(2)
+
+# measured_at defaults to today when not pending
+if status != "pending" and measured_at is None:
+    measured_at = datetime.now().strftime("%Y-%m-%d")
+
+with open(adr_path) as f:
+    body = f.read()
+
+m = re.match(r"^---\n(.*?)\n---\n", body, re.DOTALL)
+if not m:
+    print("ADR is missing YAML frontmatter (pre-0.2 ADR or manually edited?).", file=sys.stderr)
+    print("Hint: record-outcome only updates ADRs produced by new-adr ≥ 0.2.", file=sys.stderr)
+    sys.exit(3)
+
+fm = m.group(1)
+rest = body[m.end():]
+
+# Remove any pre-existing outcome block (outcome: ... until next top-level key or EOF)
+fm_lines = fm.splitlines()
+cleaned = []
+i = 0
+while i < len(fm_lines):
+    line = fm_lines[i]
+    if line.startswith("outcome:"):
+        # skip this and all indented continuation lines
+        i += 1
+        while i < len(fm_lines) and (fm_lines[i].startswith(" ") or fm_lines[i].startswith("\t")):
+            i += 1
+        continue
+    cleaned.append(line)
+    i += 1
+
+# Build the new outcome block
+out = ["outcome:"]
+out.append(f"  status: {status}")
+out.append(f"  measured_at: {measured_at if measured_at else 'null'}")
+if predicted or actual:
+    out.append("  actual_vs_predicted:")
+    keys = sorted(set(predicted) | set(actual))
+    for k in keys:
+        out.append(f"    - dimension: {k}")
+        out.append(f"      predicted: \"{predicted.get(k, '')}\"")
+        out.append(f"      actual:    \"{actual.get(k, '')}\"")
+        if variance_reason and k == keys[0]:
+            out.append(f"      variance_reason: \"{variance_reason}\"")
+else:
+    out.append("  actual_vs_predicted: []")
+if lessons:
+    out.append("  lessons:")
+    for l in lessons:
+        out.append(f"    - \"{l}\"")
+else:
+    out.append("  lessons: []")
+
+new_fm = "\n".join(cleaned + out)
+new_body = f"---\n{new_fm}\n---\n{rest}"
+
+if dry_run:
+    sys.stdout.write(new_body)
+    sys.exit(0)
+
+with open(adr_path, "w") as f:
+    f.write(new_body)
+
+print(f"{adr_path}: outcome.status={status}{(' measured_at='+measured_at) if measured_at else ''}")
+PYEOF

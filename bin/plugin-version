@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+# plugin-version — Single source of truth for plugin version.
+# Reads .claude-plugin/plugin.json.version and propagates it to:
+#   - servers/channel/package.json (.version)
+#   - servers/channel/index.js (SERVER_VERSION constant)
+# Idempotent: safe to re-run. Exits 0 when all targets already match.
+# Usage:
+#   plugin-version [--check] [--plugin-root DIR]
+#     --check        Exit non-zero if any target is out of sync (no writes).
+#     --plugin-root  Plugin repo root (default: git toplevel or $PWD).
+set -euo pipefail
+
+CHECK_ONLY=false
+PLUGIN_ROOT=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --check)        CHECK_ONLY=true ;;
+        --plugin-root)  PLUGIN_ROOT="$2"; shift ;;
+        -h|--help)
+            sed -n '2,10p' "$0" | sed 's/^# \?//'
+            exit 0 ;;
+        *) echo "Unknown flag: $1" >&2; exit 2 ;;
+    esac
+    shift
+done
+
+if [[ -z "$PLUGIN_ROOT" ]]; then
+    if git_root=$(git rev-parse --show-toplevel 2>/dev/null); then
+        PLUGIN_ROOT="$git_root"
+    else
+        PLUGIN_ROOT="$PWD"
+    fi
+fi
+
+PLUGIN_JSON="$PLUGIN_ROOT/.claude-plugin/plugin.json"
+CHANNEL_PKG="$PLUGIN_ROOT/servers/channel/package.json"
+CHANNEL_JS="$PLUGIN_ROOT/servers/channel/index.js"
+
+if [[ ! -f "$PLUGIN_JSON" ]]; then
+    echo "plugin-version: plugin.json not found at $PLUGIN_JSON" >&2
+    exit 1
+fi
+
+command -v python3 >/dev/null 2>&1 || { echo "plugin-version: python3 required" >&2; exit 1; }
+
+SOURCE_VERSION=$(python3 -c '
+import json, sys
+with open("'"$PLUGIN_JSON"'") as f:
+    print(json.load(f)["version"])
+')
+
+if [[ -z "$SOURCE_VERSION" ]]; then
+    echo "plugin-version: could not read .version from $PLUGIN_JSON" >&2
+    exit 1
+fi
+
+DRIFT=0
+
+sync_channel_pkg() {
+    [[ -f "$CHANNEL_PKG" ]] || return 0
+    local current
+    current=$(python3 -c '
+import json
+with open("'"$CHANNEL_PKG"'") as f:
+    print(json.load(f).get("version", ""))
+')
+    if [[ "$current" != "$SOURCE_VERSION" ]]; then
+        DRIFT=$((DRIFT + 1))
+        if [[ "$CHECK_ONLY" == true ]]; then
+            echo "drift: $CHANNEL_PKG has $current, expected $SOURCE_VERSION" >&2
+        else
+            python3 -c '
+import json
+p = "'"$CHANNEL_PKG"'"
+with open(p) as f:
+    data = json.load(f)
+data["version"] = "'"$SOURCE_VERSION"'"
+with open(p, "w") as f:
+    json.dump(data, f, indent=2)
+    f.write("\n")
+'
+            echo "plugin-version: $CHANNEL_PKG \u2192 $SOURCE_VERSION"
+        fi
+    fi
+}
+
+sync_channel_js() {
+    [[ -f "$CHANNEL_JS" ]] || return 0
+    local current
+    current=$(grep -E '^const SERVER_VERSION = "' "$CHANNEL_JS" | head -1 | sed -E 's/.*"([^"]+)".*/\1/')
+    if [[ "$current" != "$SOURCE_VERSION" ]]; then
+        DRIFT=$((DRIFT + 1))
+        if [[ "$CHECK_ONLY" == true ]]; then
+            echo "drift: $CHANNEL_JS has $current, expected $SOURCE_VERSION" >&2
+        else
+            python3 -c '
+import re
+p = "'"$CHANNEL_JS"'"
+with open(p) as f:
+    src = f.read()
+src = re.sub(r"^const SERVER_VERSION = \"[^\"]+\";", "const SERVER_VERSION = \"'"$SOURCE_VERSION"'\";", src, count=1, flags=re.M)
+with open(p, "w") as f:
+    f.write(src)
+'
+            echo "plugin-version: $CHANNEL_JS \u2192 $SOURCE_VERSION"
+        fi
+    fi
+}
+
+sync_channel_pkg
+sync_channel_js
+
+if [[ "$CHECK_ONLY" == true && "$DRIFT" -gt 0 ]]; then
+    exit 1
+fi
+exit 0

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tech-advisory-board/telemetry.schema.json",
+  "title": "TAB Session Telemetry",
+  "description": "Cost and time tracking per session. Finalized in Block 2.",
+  "type": "object",
+  "properties": {
+    "session_id": {"type": "string"},
+    "mode": {"type": "string"},
+    "started_at": {"type": "string", "format": "date-time"},
+    "ended_at": {"type": ["string", "null"], "format": "date-time"},
+    "total_duration_s": {"type": "number"},
+    "phases": {"type": "array"},
+    "totals": {"type": "object"},
+    "cost_rates_used": {"type": "object"},
+    "budget_adjustments": {"type": "array"},
+    "warnings_issued": {"type": "array"},
+    "budget_exceeded": {"type": "boolean"},
+    "mcp_failures": {
+      "type": "array",
+      "description": "Structured record of tool-call failures captured by the PostToolUseFailure hook (scripts/on-tool-failure.sh). Feeds reliability metrics and drives degraded-mode fallback decisions.",
+      "items": {
+        "type": "object",
+        "required": ["at", "tool", "error_type"],
+        "properties": {
+          "at": {"type": "string", "format": "date-time"},
+          "tool": {"type": "string"},
+          "error_type": {
+            "type": "string",
+            "enum": ["timeout", "5xx", "rate-limit", "interrupt", "error", "unknown"]
+          },
+          "is_interrupt": {"type": "boolean"}
+        }
+      }
+    },
+    "execution_path": {
+      "type": "string",
+      "description": "Cross-examination backend resolved by the SKILL.md Phase 5 three-gate logic. 'agent_teams' = real Agent Teams (Claude Code v2.1.32+, env on, knob ∈ {agent_teams, auto}). 'subagents_fallback' = knob=auto but env off; degraded silently. 'subagents' = default fan-out path. See skills/tab/references/agent-teams-mode.md.",
+      "enum": ["agent_teams", "subagents_fallback", "subagents"]
+    },
+    "teammate_idles": {
+      "type": "array",
+      "description": "Teammate-stall events captured by the TeammateIdle hook (scripts/on-teammate-idle.sh). Only populated when execution_path=agent_teams.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "at": {"type": "string", "format": "date-time"},
+          "teammate": {"type": ["string", "null"]},
+          "idle_seconds": {"type": ["number", "null"]},
+          "round": {"type": ["string", "number", "null"]},
+          "reason": {"type": ["string", "null"]}
+        }
+      }
+    }
+  },
+  "required": ["session_id", "mode", "started_at"]
+}

@@ -1,0 +1,33 @@
+{
+  "name": "tech-advisory-board",
+  "owner": {
+    "name": "lucascouts",
+    "email": "lucascs@protonmail.com",
+    "url": "https://github.com/lucascouts"
+  },
+  "metadata": {
+    "description": "Single-plugin marketplace for the Technical Advisory Board plugin — multi-agent deliberation for technical decisions."
+  },
+  "plugins": [
+    {
+      "name": "tech-advisory-board",
+      "source": "./",
+      "description": "Multi-agent advisory board for technical decisions — stack selection, architecture choices, framework/database comparisons, project planning. Champions debate, Advisors evaluate, Scout maps landscape.",
+      "author": {
+        "name": "lucascouts",
+        "email": "lucascs@protonmail.com",
+        "url": "https://github.com/lucascouts"
+      },
+      "license": "MIT",
+      "category": "decision-support",
+      "keywords": [
+        "tech-advisory",
+        "architecture",
+        "stack-selection",
+        "multi-agent",
+        "decision-making",
+        "technology-evaluation"
+      ]
+    }
+  ]
+}

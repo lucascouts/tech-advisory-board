@@ -1,0 +1,305 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 5,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/detect-interrupted.sh"
+          },
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "command -v node >/dev/null 2>&1 || echo 'TAB warning: node not in PATH; LSP servers and some MCP bridges will be unavailable (see docs/LSP_SETUP.md)' >&2"
+          },
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "[ \"${CLAUDE_PLUGIN_OPTION_agent_team_mode:-subagents}\" = agent_teams ] && [ -z \"${CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS:-}\" ] && echo 'TAB warning: agent_team_mode=agent_teams but CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS is unset. Complete/Complete+ sessions will hard-fail at phase 7. Set the env var, or switch agent_team_mode to auto (silent fallback) or subagents (stable default). See skills/tab/references/agent-teams-mode.md.' >&2 || true"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 5,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/inject-tab-context.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "if": "Write(**/.tab/sessions/**)",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 3,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/update-telemetry.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "if": "Edit(**/.claude-plugin/plugin.json) || Write(**/.claude-plugin/plugin.json) || MultiEdit(**/.claude-plugin/plugin.json)",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 3,
+            "command": "${CLAUDE_PLUGIN_ROOT}/bin/plugin-version --plugin-root ${CLAUDE_PLUGIN_ROOT}"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "mcp__.*__.*|WebFetch|WebSearch",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 3,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-tool-failure.sh"
+          }
+        ]
+      }
+    ],
+    "TaskCreated": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-task-created.sh"
+          }
+        ]
+      }
+    ],
+    "TaskCompleted": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-task-completed.sh"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 3,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/update-telemetry-subagent.sh"
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 4,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-stop-failure.sh"
+          }
+        ]
+      }
+    ],
+    "CwdChanged": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-reactive-change.sh"
+          }
+        ]
+      }
+    ],
+    "FileChanged": [
+      {
+        "matcher": "config.json|index.md|synthesis.json|state.json|state-full.json",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-reactive-change.sh"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 10,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/archive-idle-sessions.sh"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 3,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-notification.sh"
+          }
+        ]
+      }
+    ],
+    "InstructionsLoaded": [
+      {
+        "matcher": "session_start",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-instructions-loaded.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "compact",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-instructions-loaded.sh"
+          }
+        ]
+      }
+    ],
+    "Elicitation": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-elicitation.sh"
+          }
+        ]
+      }
+    ],
+    "ElicitationResult": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-elicitation.sh"
+          }
+        ]
+      }
+    ],
+    "PermissionDenied": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-permission-denied.sh"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "Read|Glob|Grep",
+        "if": "Read(**/.tab/**)",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-permission-request.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Glob|Grep",
+        "if": "Glob(**/.tab/**)",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-permission-request.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Glob|Grep",
+        "if": "Grep(**/.tab/**)",
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-permission-request.sh"
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-subagent-start.sh"
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-teammate-idle.sh"
+          }
+        ]
+      }
+    ],
+    "ConfigChange": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-config-change.sh"
+          }
+        ]
+      }
+    ],
+    "WorktreeCreate": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-worktree-create.sh"
+          }
+        ]
+      }
+    ],
+    "WorktreeRemove": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 2,
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/on-worktree-remove.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

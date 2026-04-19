@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+# check-mcps — inspect Claude Code settings for recommended MCP servers.
+#
+# Reads ~/.claude/settings.json and (if present)
+# $CLAUDE_PROJECT_DIR/.claude/settings.json, and reports which of the
+# three TAB-recommended MCPs are configured: perplexity, context7,
+# brave-search. Makes no network calls and mutates nothing.
+#
+# Exit codes:
+#   0   all three MCPs configured (at user or project scope)
+#   1   one or more MCPs missing
+#   2   bad invocation / python3 unavailable
+#
+# Usage:
+#   check-mcps [--json]
+#
+#   --json   emit machine-readable JSON instead of text
+set -uo pipefail
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    sed -n '2,16p' "$0" | sed 's/^# \?//'
+    exit 0
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "check-mcps: python3 is required" >&2
+    exit 2
+fi
+
+MODE="text"
+if [[ "${1:-}" == "--json" ]]; then
+    MODE="json"
+fi
+
+USER_SETTINGS="${HOME}/.claude/settings.json"
+PROJECT_SETTINGS="${CLAUDE_PROJECT_DIR:-$PWD}/.claude/settings.json"
+
+python3 - "$USER_SETTINGS" "$PROJECT_SETTINGS" "$MODE" <<'PYEOF'
+import json
+import os
+import sys
+
+user_path, project_path, mode = sys.argv[1], sys.argv[2], sys.argv[3]
+recommended = ["perplexity", "context7", "brave-search"]
+
+
+def load(path):
+    if not os.path.isfile(path):
+        return None, "missing"
+    try:
+        with open(path, encoding="utf-8") as fp:
+            return json.load(fp), "ok"
+    except json.JSONDecodeError as exc:
+        return None, f"invalid-json: {exc}"
+    except OSError as exc:
+        return None, f"read-error: {exc}"
+
+
+def servers(data):
+    if not isinstance(data, dict):
+        return {}
+    block = data.get("mcpServers") or {}
+    return block if isinstance(block, dict) else {}
+
+
+user, user_status = load(user_path)
+project, project_status = load(project_path)
+
+user_servers = servers(user)
+project_servers = servers(project)
+
+result = {
+    "user_settings": {"path": user_path, "status": user_status},
+    "project_settings": {"path": project_path, "status": project_status},
+    "recommended": {},
+}
+
+missing = []
+for name in recommended:
+    scope = None
+    if name in project_servers:
+        scope = "project"
+    elif name in user_servers:
+        scope = "user"
+    result["recommended"][name] = {"configured": scope is not None, "scope": scope}
+    if scope is None:
+        missing.append(name)
+
+result["missing"] = missing
+result["degraded_mode"] = len(missing) > 0
+
+if mode == "json":
+    print(json.dumps(result, indent=2))
+else:
+    print(f"User settings   : {user_path} [{user_status}]")
+    print(f"Project settings: {project_path} [{project_status}]")
+    print()
+    print("Recommended MCPs:")
+    for name in recommended:
+        entry = result["recommended"][name]
+        if entry["configured"]:
+            print(f"  [ok]      {name:<14} (scope: {entry['scope']})")
+        else:
+            print(f"  [missing] {name:<14} — not configured")
+    print()
+    if missing:
+        print(f"Degraded mode: claims will be tagged [unverified] for {len(missing)} source(s).")
+        print("See docs/MCP_SETUP.md for installation instructions.")
+    else:
+        print("All recommended MCPs are configured. TAB will run in full-confidence mode.")
+    print()
+    print("Note: Alternative MCPs with equivalent capabilities (Tavily, Exa, Kagi, etc)")
+    print("are accepted — see docs/MCP_SETUP.md § Capability contract.")
+
+sys.exit(1 if missing else 0)
+PYEOF

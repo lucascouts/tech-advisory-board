@@ -1,0 +1,161 @@
+#!/usr/bin/env bash
+# compute-cost — compute USD cost from token counts, or roll up a telemetry file.
+# Modes:
+#   compute-cost <model> <input-tokens> <output-tokens>
+#       → {"model": "...", "tokens_in": N, "tokens_out": N, "cost_usd": F}
+#   compute-cost --from-telemetry <path-to-telemetry.json>
+#       → roll-up across all phases, emits the totals block per §7.2
+#   compute-cost --from-cost-stdin
+#       → consume the breakdown JSON emitted by Claude Code's `/cost`
+#         command (Claude Code ≥ v2.1.92) on stdin; re-emits the totals
+#         block with native per-model + cache-hit accounting, bypassing
+#         the heuristic rate table below. Preferred when available.
+# Rates are the published per-Mtok rates for Claude models (see
+#  "cost_rates_used"). Override via env vars:
+#   TAB_RATE_OPUS_IN / TAB_RATE_OPUS_OUT
+#   TAB_RATE_SONNET_IN / TAB_RATE_SONNET_OUT
+#   TAB_RATE_HAIKU_IN / TAB_RATE_HAIKU_OUT
+set -euo pipefail
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    sed -n '2,17p' "$0" | sed 's/^# \?//'
+    exit 0
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "python3 required" >&2
+    exit 1
+fi
+
+if [[ "${1:-}" == "--from-cost-stdin" ]]; then
+    exec python3 -c '
+import json, sys
+try:
+    payload = json.load(sys.stdin)
+except json.JSONDecodeError as e:
+    print(f"{{\"error\":\"invalid JSON on stdin: {e}\"}}", file=sys.stderr)
+    sys.exit(2)
+
+totals = {
+    "cost_usd": float(payload.get("total_cost_usd") or 0.0),
+    "tokens_in": int((payload.get("tokens") or {}).get("input") or 0),
+    "tokens_out": int((payload.get("tokens") or {}).get("output") or 0),
+    "cache_read_tokens": int((payload.get("cache") or {}).get("read") or 0),
+    "cache_write_tokens": int((payload.get("cache") or {}).get("write") or 0),
+    "cache_read_cost_usd": float((payload.get("cache") or {}).get("read_cost_usd") or 0.0),
+    "cache_write_cost_usd": float((payload.get("cache") or {}).get("write_cost_usd") or 0.0),
+    "by_model": payload.get("by_model") or {},
+    "source": "/cost",
+}
+print(json.dumps({"totals": totals}, indent=2))
+'
+fi
+
+if [[ "${1:-}" == "--from-telemetry" ]]; then
+    [[ -n "${2:-}" ]] || { echo "Missing telemetry path" >&2; exit 2; }
+    TELEMETRY_PATH="$2"
+    [[ -f "$TELEMETRY_PATH" ]] || { echo "File not found: $TELEMETRY_PATH" >&2; exit 1; }
+    python3 - "$TELEMETRY_PATH" <<'PYEOF'
+import json, os, sys
+
+RATES = {
+    "opus":   {"in": float(os.environ.get("TAB_RATE_OPUS_IN",    "15.00")),
+               "out": float(os.environ.get("TAB_RATE_OPUS_OUT",  "75.00"))},
+    "sonnet": {"in": float(os.environ.get("TAB_RATE_SONNET_IN",   "3.00")),
+               "out": float(os.environ.get("TAB_RATE_SONNET_OUT","15.00"))},
+    "haiku":  {"in": float(os.environ.get("TAB_RATE_HAIKU_IN",    "0.80")),
+               "out": float(os.environ.get("TAB_RATE_HAIKU_OUT",  "4.00"))},
+}
+
+with open(sys.argv[1]) as f:
+    tel = json.load(f)
+
+total_in = 0
+total_out = 0
+subagents = 0
+mcp_total = 0
+by_phase = []
+
+for ph in tel.get("phases", []):
+    pin = int(ph.get("tokens_in", 0))
+    pout = int(ph.get("tokens_out", 0))
+    total_in += pin
+    total_out += pout
+    subagents += int(ph.get("subagents_invoked", 0))
+    for v in (ph.get("mcp_queries") or {}).values():
+        try:
+            mcp_total += int(v)
+        except Exception:
+            pass
+    by_phase.append({
+        "phase": ph.get("phase"),
+        "tokens_in": pin,
+        "tokens_out": pout,
+    })
+
+# Without per-phase model tagging, assume a mixed cost using a conservative
+# "sonnet" bias — the Moderator is expected to override via env if a
+# phase ran under opus. The final number is an estimate, not billing truth.
+default_model = os.environ.get("TAB_DEFAULT_MODEL", "sonnet")
+rates = RATES.get(default_model, RATES["sonnet"])
+cost = (total_in / 1_000_000.0) * rates["in"] + (total_out / 1_000_000.0) * rates["out"]
+
+result = {
+    "default_model_assumed": default_model,
+    "rates_used": {
+        f"{default_model}_input_per_mtok": rates["in"],
+        f"{default_model}_output_per_mtok": rates["out"],
+    },
+    "totals": {
+        "tokens_in": total_in,
+        "tokens_out": total_out,
+        "cost_usd": round(cost, 4),
+        "subagents_invoked": subagents,
+        "mcp_queries_total": mcp_total,
+    },
+    "by_phase": by_phase,
+}
+print(json.dumps(result, indent=2))
+PYEOF
+    exit 0
+fi
+
+# Ad-hoc mode: <model> <in> <out>
+if [[ $# -lt 3 ]]; then
+    echo "Usage: compute-cost <model> <input-tokens> <output-tokens>" >&2
+    echo "       compute-cost --from-telemetry <path>" >&2
+    exit 2
+fi
+
+python3 - "$1" "$2" "$3" <<'PYEOF'
+import json, os, sys
+
+RATES = {
+    "opus":   {"in": float(os.environ.get("TAB_RATE_OPUS_IN",    "15.00")),
+               "out": float(os.environ.get("TAB_RATE_OPUS_OUT",  "75.00"))},
+    "sonnet": {"in": float(os.environ.get("TAB_RATE_SONNET_IN",   "3.00")),
+               "out": float(os.environ.get("TAB_RATE_SONNET_OUT","15.00"))},
+    "haiku":  {"in": float(os.environ.get("TAB_RATE_HAIKU_IN",    "0.80")),
+               "out": float(os.environ.get("TAB_RATE_HAIKU_OUT",  "4.00"))},
+}
+
+model = sys.argv[1].lower()
+tokens_in = int(sys.argv[2])
+tokens_out = int(sys.argv[3])
+
+if model not in RATES:
+    print(json.dumps({"error": f"unknown model: {model}",
+                      "supported": sorted(RATES.keys())}))
+    sys.exit(1)
+
+r = RATES[model]
+cost = (tokens_in / 1_000_000.0) * r["in"] + (tokens_out / 1_000_000.0) * r["out"]
+
+print(json.dumps({
+    "model": model,
+    "tokens_in": tokens_in,
+    "tokens_out": tokens_out,
+    "rates_used": {"input_per_mtok": r["in"], "output_per_mtok": r["out"]},
+    "cost_usd": round(cost, 6),
+}, indent=2))
+PYEOF

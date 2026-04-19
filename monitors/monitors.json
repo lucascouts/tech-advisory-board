@@ -1,0 +1,16 @@
+{
+  "monitors": [
+    {
+      "name": "tab-session-monitor",
+      "description": "Streams JSON-line events as TAB sessions advance: phase transitions, subagent start/return, budget thresholds.",
+      "command": "${CLAUDE_PLUGIN_ROOT}/scripts/monitor.sh",
+      "when": "on-skill-invoke:tab"
+    },
+    {
+      "name": "tab-stall-guard",
+      "description": "Detects subagents stalled >30 min without SubagentStop (pre-first-token hangs, MCP setup stalls). Second-line defense beyond the Claude Code ≥ v2.1.113 native 10-min kill.",
+      "command": "${CLAUDE_PLUGIN_ROOT}/scripts/stall-guard.sh",
+      "when": "on-skill-invoke:tab"
+    }
+  ]
+}

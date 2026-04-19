@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tech-advisory-board/state-full.schema.json",
+  "title": "TAB Session Full Snapshot",
+  "description": "Complete snapshot with claims registry, subagent log, checkpoints. Finalized in Block 2. Claims registry entry schema documented inline in §7.1.",
+  "type": "object",
+  "properties": {
+    "session_id": {"type": "string"},
+    "artifacts_written": {"type": "array", "items": {"type": "string"}},
+    "subagents_invoked": {"type": "array"},
+    "claims_registry": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {"type": "string"},
+          "claim": {"type": "string"},
+          "source_type": {"enum": ["champion", "advisor", "researcher", "auditor", "user"]},
+          "source_id": {"type": "string"},
+          "verified": {"type": "boolean"},
+          "verification_sources": {"type": "array"},
+          "confidence": {"enum": ["high-conf", "med-conf", "low-conf", "unverified"]},
+          "first_seen_phase": {"type": "string"},
+          "contested_by": {"type": "array", "items": {"type": "string"}},
+          "superseded_by": {"type": ["string", "null"]}
+        },
+        "required": ["id", "claim", "source_type", "confidence"]
+      }
+    },
+    "unverified_claims": {"type": "array"},
+    "assumptions_recorded": {"type": "array"},
+    "checkpoints": {"type": "array"},
+    "landscape": {
+      "type": "object",
+      "description": "Scout outputs + reinstatements from triage-protocol.md §1 (discard triage).",
+      "properties": {
+        "shortlist": {"type": "array"},
+        "discarded": {"type": "array"},
+        "discard_reversals": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["candidate", "original_reason", "at"],
+            "properties": {
+              "candidate": {"type": "string"},
+              "original_reason": {"type": "string"},
+              "question_asked": {"type": "string"},
+              "user_response": {"type": "string"},
+              "outcome": {"enum": ["reinstated", "confirmed-discard", "unclear"]},
+              "at": {"type": "string", "format": "date-time"}
+            }
+          }
+        }
+      }
+    },
+    "premise_check": {
+      "type": "object",
+      "description": "Adversarial premise check from triage-protocol.md §2.",
+      "properties": {
+        "performed_by": {"enum": ["auditor-subagent", "moderator-inline"]},
+        "risks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["premise", "risk_level"],
+            "properties": {
+              "premise": {"type": "string"},
+              "risk_level": {"enum": ["high", "medium", "low"]},
+              "evidence_for": {"type": "array", "items": {"type": "string"}},
+              "evidence_against": {"type": "array", "items": {"type": "string"}},
+              "resolution_needed": {"type": "boolean"}
+            }
+          }
+        }
+      }
+    },
+    "steel_man": {
+      "type": "object",
+      "description": "Best-discard steel-man from triage-protocol.md §3.",
+      "properties": {
+        "target": {"type": "string"},
+        "steel_man_score": {"type": "number"},
+        "champion_instance": {"type": "string"},
+        "outcome": {"enum": ["reinstated", "kept-discarded"]},
+        "rationale": {"type": "string"}
+      }
+    },
+    "session_language": {
+      "type": "string",
+      "description": "IETF BCP 47 tag detected in Phase 1 and LOCKED for the remainder of the session (see §3.5.3 of APRIMORAMENTOS.md). Re-injected by PostCompact and InstructionsLoaded hooks so champions / advisors inherit it consistently."
+    }
+  },
+  "required": ["session_id"]
+}

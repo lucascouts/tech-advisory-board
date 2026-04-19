@@ -1,0 +1,249 @@
+#!/usr/bin/env bash
+# vanguard-timeline — read/update the cross-project Vanguard maturity ledger.
+# Storage: ${CLAUDE_PLUGIN_DATA}/vanguard-timeline.json
+# Schema:  schemas/vanguard-timeline.schema.json
+# Subcommands:
+#   vanguard-timeline get <technology>
+#       → {"technology": "...", "found": bool, "last_assessment": {...}|null,
+#          "from_cache": bool, "age_days": N|null}
+#       "from_cache: true" when the last assessment is within 90 days.
+#   vanguard-timeline list
+#       → array of {name, last_assessed, verdict, assessment_count}
+#   vanguard-timeline append <technology> --date YYYY-MM-DD
+#                                            --session-ref <ref>
+#                                            --verdict production-ready|near-ready|experimental
+#                                            --months <int>
+#                                            [--blockers "a,b,c"]
+#                                            [--triggers "t1,t2"]
+#       → appends an assessment; creates the technology entry if new.
+# Env:
+#   CLAUDE_PLUGIN_DATA — overrides storage location
+#                         (default: ~/.claude/plugins/data/tech-advisory-board/)
+#   TAB_VANGUARD_WINDOW_DAYS — "from_cache" window (default 90)
+set -uo pipefail
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" || -z "${1:-}" ]]; then
+    sed -n '2,30p' "$0" | sed 's/^# \?//'
+    exit 0
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "python3 required" >&2
+    exit 1
+fi
+
+SUBCMD="$1"
+shift
+
+STORAGE_BASE="${CLAUDE_PLUGIN_DATA:-$HOME/.claude/plugins/data/tech-advisory-board}"
+STORAGE_PATH="$STORAGE_BASE/vanguard-timeline.json"
+mkdir -p "$STORAGE_BASE"
+
+case "$SUBCMD" in
+    get)
+        TECH="${1:-}"
+        [[ -n "$TECH" ]] || { echo "Usage: vanguard-timeline get <technology>" >&2; exit 2; }
+        python3 - "$STORAGE_PATH" "$TECH" <<'PYEOF'
+import json, os, sys
+from datetime import datetime, date, timezone
+
+path, tech = sys.argv[1], sys.argv[2]
+window = int(os.environ.get("TAB_VANGUARD_WINDOW_DAYS", "90"))
+
+data = {"schema_version": 1, "technologies": []}
+if os.path.isfile(path):
+    try:
+        with open(path) as f:
+            data = json.load(f)
+    except Exception as e:
+        print(json.dumps({"error": f"timeline unreadable: {e}"}))
+        sys.exit(1)
+
+entry = next((t for t in data.get("technologies", [])
+              if t.get("name","").lower() == tech.lower()), None)
+
+if not entry or not entry.get("assessments"):
+    print(json.dumps({
+        "technology": tech,
+        "found": False,
+        "last_assessment": None,
+        "from_cache": False,
+        "age_days": None,
+    }, indent=2))
+    sys.exit(0)
+
+last = entry["assessments"][-1]
+try:
+    last_date = date.fromisoformat(last.get("date"))
+    today = datetime.now(timezone.utc).date()
+    age = (today - last_date).days
+    from_cache = age <= window
+except Exception:
+    age = None
+    from_cache = False
+
+result = {
+    "technology": entry.get("name", tech),
+    "found": True,
+    "last_assessment": last,
+    "from_cache": from_cache,
+    "age_days": age,
+    "window_days": window,
+    "adoption_triggers": entry.get("adoption_triggers", []),
+}
+print(json.dumps(result, indent=2))
+PYEOF
+        ;;
+
+    list)
+        python3 - "$STORAGE_PATH" <<'PYEOF'
+import json, os, sys
+path = sys.argv[1]
+data = {"schema_version": 1, "technologies": []}
+if os.path.isfile(path):
+    try:
+        with open(path) as f:
+            data = json.load(f)
+    except Exception as e:
+        print(json.dumps({"error": f"timeline unreadable: {e}"}))
+        sys.exit(1)
+
+summary = []
+for t in data.get("technologies", []):
+    assessments = t.get("assessments", [])
+    last = assessments[-1] if assessments else {}
+    summary.append({
+        "name": t.get("name"),
+        "last_assessed": t.get("last_assessed"),
+        "verdict": last.get("verdict"),
+        "assessment_count": len(assessments),
+    })
+
+print(json.dumps({"technologies": summary, "path": path}, indent=2))
+PYEOF
+        ;;
+
+    append)
+        TECH="${1:-}"
+        [[ -n "$TECH" ]] || { echo "Usage: vanguard-timeline append <technology> --date ... --verdict ... --months ..." >&2; exit 2; }
+        shift
+
+        DATE=""
+        SESSION_REF=""
+        VERDICT=""
+        MONTHS=""
+        BLOCKERS=""
+        TRIGGERS=""
+        while [[ $# -gt 0 ]]; do
+            case "$1" in
+                --date)         DATE="$2"; shift ;;
+                --session-ref)  SESSION_REF="$2"; shift ;;
+                --verdict)      VERDICT="$2"; shift ;;
+                --months)       MONTHS="$2"; shift ;;
+                --blockers)     BLOCKERS="$2"; shift ;;
+                --triggers)     TRIGGERS="$2"; shift ;;
+                *) echo "Unknown flag: $1" >&2; exit 2 ;;
+            esac
+            shift
+        done
+
+        [[ -n "$DATE" ]] || { echo "--date required (YYYY-MM-DD)" >&2; exit 2; }
+        [[ -n "$VERDICT" ]] || { echo "--verdict required" >&2; exit 2; }
+
+        python3 - "$STORAGE_PATH" "$TECH" "$DATE" "$SESSION_REF" "$VERDICT" \
+                 "$MONTHS" "$BLOCKERS" "$TRIGGERS" <<'PYEOF'
+# Concurrency note: vanguard-timeline.json is shared across all projects
+# that run TAB on the same machine, so two sessions on different projects
+# can race. All mutations go through scripts/lib/json_atomic.py so the
+# read-modify-write cycle serializes on the file's flock and the swap
+# is atomic for readers.
+import json, os, sys
+from pathlib import Path
+
+sys.path.insert(0, os.path.join(
+    os.environ.get("CLAUDE_PLUGIN_ROOT", ""), "scripts", "lib"))
+from json_atomic import atomic_update
+
+(path, tech, date_s, session_ref, verdict, months_s,
+ blockers_s, triggers_s) = sys.argv[1:9]
+
+valid_verdicts = {"production-ready", "near-ready", "experimental"}
+if verdict not in valid_verdicts:
+    print(json.dumps({"error": f"invalid verdict: {verdict}",
+                      "valid": sorted(valid_verdicts)}))
+    sys.exit(2)
+
+assessment = {
+    "date": date_s,
+    "verdict": verdict,
+}
+if session_ref:
+    assessment["session_ref"] = session_ref
+if months_s:
+    try:
+        assessment["maturity_estimate_months"] = int(months_s)
+    except ValueError:
+        pass
+if blockers_s:
+    assessment["blockers"] = [b.strip() for b in blockers_s.split(",") if b.strip()]
+
+triggers_list = [t.strip() for t in triggers_s.split(",") if t.strip()] if triggers_s else None
+
+# The mutator captures the final total_assessments count so we can echo it
+# to stdout after the atomic write, for the caller.
+outcome = {"total_assessments": 0}
+
+def apply_append(data):
+    data.setdefault("schema_version", 1)
+    data.setdefault("technologies", [])
+    entry = next(
+        (t for t in data["technologies"]
+         if t.get("name", "").lower() == tech.lower()),
+        None,
+    )
+    if not entry:
+        entry = {
+            "name": tech,
+            "first_assessed": date_s,
+            "last_assessed": date_s,
+            "assessments": [],
+            "adoption_triggers": [],
+        }
+        data["technologies"].append(entry)
+    entry["assessments"].append(assessment)
+    entry["last_assessed"] = date_s
+    if triggers_list is not None:
+        entry["adoption_triggers"] = triggers_list
+    outcome["total_assessments"] = len(entry["assessments"])
+    return data
+
+try:
+    atomic_update(
+        Path(path),
+        apply_append,
+        default={"schema_version": 1, "technologies": []},
+        timeout_seconds=5.0,
+    )
+except TimeoutError as e:
+    print(json.dumps({"error": f"timeline lock contention: {e}"}))
+    sys.exit(1)
+except OSError as e:
+    print(json.dumps({"error": f"timeline write failed: {e}"}))
+    sys.exit(1)
+
+print(json.dumps({
+    "appended": True,
+    "technology": tech,
+    "assessment": assessment,
+    "total_assessments": outcome["total_assessments"],
+    "path": path,
+}, indent=2))
+PYEOF
+        ;;
+
+    *)
+        echo "Unknown subcommand: $SUBCMD" >&2
+        echo "Use: get | list | append" >&2
+        exit 2
+        ;;
+esac

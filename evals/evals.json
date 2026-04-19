@@ -1,0 +1,1098 @@
+{
+  "skill_name": "tech-advisory-board",
+  "evals": [
+    {
+      "id": 1,
+      "should_trigger": true,
+      "prompt": "Quero criar um cardápio digital online para restaurantes. A ideia é que o dono do restaurante cadastre os pratos, categorias, preços, e o cliente acesse pelo celular escaneando um QR code. Precisa ter foto dos pratos, opção de marcar favoritos, e filtro por categoria. Minha equipe sou eu e mais um dev junior, ambos com experiência em JavaScript e um pouco de Python. Orçamento apertado, quero começar com um MVP pra validar com uns 10 restaurantes da região. Me ajuda a definir a stack completa?",
+      "expected_output": "Análise completa com context extraction, classificação como MVP, research de frameworks atuais, landscape com shortlist e discard table, debate entre champions com stacks como Next.js, Remix, ou similar, evaluation de advisors, e síntese final com recomendação primária, alternativas, e caminho de evolução POC→MVP→Full",
+      "files": [],
+      "expectations": [
+        "Output is entirely in Brazilian Portuguese (pt-BR) except for technical terms",
+        "Project is classified as MVP (or POC→MVP path)",
+        "At least 3 champions present different stack proposals",
+        "A discard table is present with alternatives considered but rejected",
+        "The synthesis includes a stage evolution path (POC→MVP→Full)",
+        "Specialists are named with their roles and speak in character",
+        "Team constraints (2 devs, JS/Python experience) are factored into recommendations",
+        "Budget constraints influence the recommendations",
+        "Advisor evaluations are produced independently (parallel subagents)"
+      ],
+      "assertions": [
+        "Output in pt-BR except technical terms",
+        "Classified as MVP or POC-to-MVP",
+        "At least 3 champion stack proposals",
+        "Discard table with rejected alternatives",
+        "Stage evolution path POC→MVP→Full present",
+        "Named specialists speak in character",
+        "Team constraints (2 devs, JS/Python) factored in",
+        "Budget constraints influence recommendations",
+        "Advisor evaluations produced independently"
+      ]
+    },
+    {
+      "id": 2,
+      "should_trigger": true,
+      "prompt": "Estou planejando uma plataforma SaaS B2B de gestão de projetos para agências de marketing digital. Multi-tenant, cada agência tem seus projetos, clientes, tarefas, timeline, e precisa de colaboração em tempo real (tipo quando alguém edita uma tarefa, os outros veem ao vivo). Time de 5 devs, 2 seniors com experiência forte em TypeScript/Node e React, 2 plenos que sabem Python, e 1 junior. Temos 8 meses pra primeira versão. Orçamento de infra de uns R$3000/mês no início. Quero algo que aguente crescer pra 500 agências sem reescrever tudo. Qual stack e arquitetura vocês recomendam?",
+      "expected_output": "Análise profunda cobrindo multi-tenancy, real-time collaboration, com debate entre stacks considerando a experiência mista do time. Deve incluir discussão de protocolos real-time (WebSocket vs SSE), estratégia de multi-tenancy (schema per tenant vs row-level), e caminho de escala",
+      "files": [],
+      "expectations": [
+        "Multi-tenancy strategy is explicitly debated (schema-per-tenant vs row-level vs database-per-tenant)",
+        "Real-time protocol specialist is invoked as an independent advisor subagent",
+        "At least one Vanguard champion presents an emerging alternative",
+        "The R$3000/month budget constraint is factored into infrastructure recommendations",
+        "Advisors produce independent scores — raw score matrix is visible in synthesis",
+        "Cross-examination occurs between champions before advisor subagents are launched",
+        "Final synthesis includes consolidated score matrix with divergence analysis",
+        "Evolution path from MVP to 500-agency scale is clearly mapped"
+      ],
+      "assertions": [
+        "Multi-tenancy strategy debated (schema vs row-level vs DB-per-tenant)",
+        "Real-time protocol advisor invoked independently",
+        "At least one Vanguard champion with emerging alternative",
+        "R$3000/month budget factored into infra recommendations",
+        "Independent advisor scores with raw score matrix",
+        "Cross-examination between champions before advisor evaluation",
+        "Consolidated score matrix with divergence analysis",
+        "Evolution path from MVP to 500-agency scale mapped"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "tenho uma ideia meio maluca, quero fazer um framework open source pra criar jogos de RPG de mesa digitais, tipo um toolkit que outros devs usam pra criar sistemas de RPG customizados (tipo D&D, Savage Worlds, etc). precisa ter engine de regras flexível, suporte a fichas de personagem dinâmicas, sistema de rolagem de dados, e uma UI pra jogar online com mapa e tokens. to sozinho por enquanto mas conheço rust e typescript bem. nunca lancei open source antes. por onde começo?",
+      "expected_output": "Análise reconhecendo a complexidade e escopo ambicioso, classificação como POC com path claro. Debate entre abordagens (monolito vs modular, Rust core + TS frontend, full TS, etc). Discussão sobre rule engine design, open source strategy, e como validar a ideia antes de construir tudo",
+      "files": [],
+      "expectations": [
+        "Project is classified as POC given solo developer and ambitious scope",
+        "The analysis addresses the open-source strategy (licensing, community building)",
+        "Rule engine architecture is specifically debated",
+        "Both Rust and TypeScript expertise are leveraged in recommendations",
+        "A Wildcard or unconventional approach is considered given the ambitious scope",
+        "The recommendation includes what to build FIRST to validate the concept",
+        "Risk assessment flags solo-developer and scope risks explicitly"
+      ],
+      "assertions": [
+        "Classified as POC for solo developer with ambitious scope",
+        "Open-source strategy addressed (licensing, community)",
+        "Rule engine architecture debated",
+        "Rust and TypeScript expertise leveraged",
+        "Wildcard or unconventional approach considered",
+        "Recommendation on what to build first for validation",
+        "Risk assessment flags solo-developer and scope risks"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 4,
+      "prompt": "Qual formatter devo usar com Python? Estou entre Ruff e Black.",
+      "expected_output": "Instant mode — Scout apresenta shortlist compacta, Moderador dá recomendação direta sem Champions ou Advisors",
+      "files": [],
+      "expectations": [
+        "Classified as Trivial/Instant",
+        "No champion presentations",
+        "Compact recommendation in ~1 message",
+        "Mentions both Ruff and Black with current versions",
+        "Output in pt-BR"
+      ],
+      "assertions": [
+        "Classified as Trivial/Instant",
+        "No champion presentations",
+        "Compact single-message recommendation",
+        "Both Ruff and Black mentioned with versions",
+        "Output in pt-BR"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 5,
+      "prompt": "Preciso escolher um banco de dados para armazenar dados de IoT — sensores enviando ~100K eventos por segundo. Dados precisam ser consultados por range de tempo. Time de 3 devs com experiência em PostgreSQL.",
+      "expected_output": "Padrão mode com debate entre TimescaleDB, InfluxDB, QuestDB e possivelmente ClickHouse. Data-focused advisor invoked with identity card.",
+      "files": [],
+      "expectations": [
+        "Classified as Médio/Padrão",
+        "At least 3 champions for different time-series solutions",
+        "A Data-focused advisor is invoked with identity card and random name",
+        "PostgreSQL experience is factored into recommendations",
+        "Throughput of 100K events/s is addressed in benchmarks",
+        "Evolution path from current scale to 10x"
+      ],
+      "assertions": [
+        "Classified as Medio/Padrao mode",
+        "At least 3 champions for time-series solutions",
+        "Data-focused advisor invoked with identity card and random name",
+        "PostgreSQL experience factored in",
+        "100K events/s throughput addressed in benchmarks",
+        "Evolution path from current to 10x scale"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 6,
+      "prompt": "tenho uma ideia de app, o que vocês acham?",
+      "expected_output": "Moderador entra em context extraction, fazendo perguntas sobre o que está sendo construído, público-alvo, equipe, etc.",
+      "files": [],
+      "expectations": [
+        "Context extraction questions are asked before any analysis",
+        "At least 3-5 questions from the question bank",
+        "No premature recommendations",
+        "Moderador persona is present"
+      ],
+      "assertions": [
+        "Context extraction questions before any analysis",
+        "At least 3-5 questions from question bank",
+        "No premature recommendations",
+        "Moderador persona present"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 7,
+      "prompt": "Preciso criar um editor visual drag-and-drop tipo Figma para criar dashboards customizáveis. Time de 3 devs com experiência forte em React. Queremos um MVP em 4 meses.",
+      "expected_output": "Completo mode com debate sobre canvas libraries (Konva, Fabric.js, react-flow, etc). Frontend and UX advisors invoked with identity cards.",
+      "files": [],
+      "expectations": [
+        "Classified as Alto/Completo",
+        "A Frontend-focused advisor is invoked with identity card and random name",
+        "A UX-focused advisor is invoked with identity card and random name",
+        "Canvas/rendering library debate is central",
+        "MVP timeline of 4 months factors into recommendations",
+        "At least one Vanguard champion"
+      ],
+      "assertions": [
+        "Classified as Alto/Completo",
+        "Frontend-focused advisor invoked with identity card and random name",
+        "UX-focused advisor invoked with identity card and random name",
+        "Canvas/rendering library debate central",
+        "4-month MVP timeline factored in",
+        "At least one Vanguard champion"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 8,
+      "prompt": "Preciso migrar nossa aplicação de Heroku para algo mais barato. Temos 3 microserviços em Node.js, banco PostgreSQL no RDS, Redis para cache. Cerca de 50K usuários mensais. Orçamento máximo de R$500/mês para infra.",
+      "expected_output": "Padrão mode com debate entre Railway, Fly.io, DigitalOcean, e possivelmente Hetzner/Coolify. Infrastructure advisors invoked with identity cards.",
+      "files": [],
+      "expectations": [
+        "Infrastructure-focused advisors are invoked with identity cards and random names",
+        "Cost projection is central to recommendations",
+        "R$500/month budget constraint is respected",
+        "Migration path from Heroku is explicitly addressed",
+        "Existing stack (Node.js, PostgreSQL, Redis) is preserved or justified if changed"
+      ],
+      "assertions": [
+        "Infrastructure-focused advisors invoked with identity cards and random names",
+        "Cost projection central to recommendations",
+        "R$500/month budget constraint respected",
+        "Heroku migration path explicitly addressed",
+        "Existing stack (Node.js, PostgreSQL, Redis) preserved or justified"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 9,
+      "prompt": "Estou entre Next.js e Remix para o frontend do meu projeto. Já tenho o backend pronto em Node. Time de 2 devs com experiência em React. Me ajuda a decidir?",
+      "expected_output": "Rápido mode com 2 Champions (Next.js e Remix), matriz simplificada, recomendação direta",
+      "files": [],
+      "expectations": [
+        "Classified as Simples/Rápido",
+        "Exactly 2 champions (one for each option)",
+        "Simplified comparison matrix present",
+        "No cross-examination (Rápido mode)",
+        "Backend compatibility is addressed"
+      ],
+      "assertions": [
+        "Classified as Simples/Rapido",
+        "Exactly 2 champions (Next.js and Remix)",
+        "Simplified comparison matrix present",
+        "No cross-examination in Rapido mode",
+        "Backend compatibility addressed"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 10,
+      "prompt": "Qual ORM usar com PostgreSQL em Node.js? Quero que façam a análise no modo completo.",
+      "expected_output": "Apesar de ser uma decisão simples, o modo completo é usado conforme pedido do usuário. Champions para Prisma, Drizzle, TypeORM/Knex, etc.",
+      "files": [],
+      "expectations": [
+        "User override to Completo mode is respected",
+        "At least 3 champions present full proposals",
+        "Cross-examination phase occurs",
+        "Full comparative matrix with weights",
+        "ORM-specific criteria (migrations, type safety, query builder vs schema-first)"
+      ],
+      "assertions": [
+        "User override to Completo mode respected",
+        "At least 3 champions with full proposals",
+        "Cross-examination phase occurs",
+        "Full comparative matrix with weights",
+        "ORM-specific criteria covered (migrations, type safety, query builder)"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 11,
+      "prompt": "Fix the bug in line 43 of auth.ts",
+      "should_trigger": false,
+      "reason": "Debugging task, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 12,
+      "prompt": "Write unit tests for the UserService class",
+      "should_trigger": false,
+      "reason": "Implementation task, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 13,
+      "prompt": "Refactor this function to use async/await",
+      "should_trigger": false,
+      "reason": "Refactoring task, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 14,
+      "prompt": "Can you explain how React hooks work?",
+      "should_trigger": false,
+      "reason": "Educational question, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 15,
+      "prompt": "Deploy this to production",
+      "should_trigger": false,
+      "reason": "Operational task, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 16,
+      "prompt": "Review this pull request",
+      "should_trigger": false,
+      "reason": "Code review task, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 17,
+      "prompt": "How do I configure ESLint in my project?",
+      "should_trigger": false,
+      "reason": "Setup/configuration task, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 18,
+      "prompt": "Translate this error message to Portuguese",
+      "should_trigger": false,
+      "reason": "Translation task, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 19,
+      "prompt": "Run npm install and tell me what happens",
+      "should_trigger": false,
+      "reason": "Command execution task, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 20,
+      "prompt": "Create a CRUD API in FastAPI with endpoints for users and products",
+      "should_trigger": false,
+      "reason": "Direct implementation task, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 21,
+      "prompt": "/tab \"analise o projeto nessa pasta e me diga o que melhorar\"",
+      "expected_output": "Intent detected as Analyze. Auto-detects project context, invokes Advisors to evaluate existing architecture, produces strengths/risks/improvement recommendations",
+      "files": [],
+      "expectations": [
+        "Intent is classified as Analyze",
+        "Auto-detected context is used (extract-context.sh output)",
+        "Advisors evaluate the existing project as independent subagents, not propose alternatives",
+        "No Champions are assigned (evaluation mode)",
+        "Synthesis includes strengths, risks, and improvement recommendations",
+        "Output in pt-BR"
+      ],
+      "assertions": [
+        "Intent classified as Analyze",
+        "Auto-detected context used from extract-context.sh",
+        "Advisors evaluate existing project independently",
+        "No Champions assigned (evaluation mode)",
+        "Synthesis includes strengths, risks, and improvements",
+        "Output in pt-BR"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 22,
+      "prompt": "/tab \"quero criar um SaaS de gestão de tarefas para pequenas empresas\"",
+      "expected_output": "Intent detected as Create. Pre-fills context with 'SaaS de gestão de tarefas para pequenas empresas', proceeds with standard TAB flow asking remaining context questions",
+      "files": [],
+      "expectations": [
+        "Intent is classified as Create",
+        "The description is used as initial context, skipping 'what is being built' question",
+        "Context extraction asks remaining questions (team, budget, timeline, etc.)",
+        "Standard TAB flow proceeds with Champions and Advisors",
+        "Output in pt-BR"
+      ],
+      "assertions": [
+        "Intent classified as Create",
+        "Description pre-fills context, skips 'what is being built'",
+        "Remaining context questions asked (team, budget, timeline)",
+        "Standard TAB flow with Champions and Advisors",
+        "Output in pt-BR"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 23,
+      "prompt": "/tab \"vamos melhorar a arquitetura desse projeto, tá ficando difícil de manter\"",
+      "expected_output": "Intent detected as Improve. Auto-detects current stack, Champions propose improvement strategies (not alternative stacks), Advisors evaluate strategies",
+      "files": [],
+      "expectations": [
+        "Intent is classified as Improve",
+        "Current stack is auto-detected and analyzed",
+        "Champions propose improvement strategies (e.g., refactoring, patterns, architecture changes)",
+        "Champions do NOT propose replacing the entire stack",
+        "Advisors evaluate each improvement strategy",
+        "Synthesis includes current issues + recommended changes + priority order"
+      ],
+      "assertions": [
+        "Intent classified as Improve",
+        "Current stack auto-detected and analyzed",
+        "Champions propose improvement strategies (refactoring, patterns, architecture)",
+        "Champions do NOT propose full stack replacement",
+        "Advisors evaluate each improvement strategy",
+        "Synthesis: current issues + changes + priority order"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 24,
+      "prompt": "/tab \"./src/api\"",
+      "expected_output": "Intent detected as Analyze (path provided). Reads the ./src/api folder structure and key files, Advisors evaluate the API architecture",
+      "files": [],
+      "expectations": [
+        "Intent is classified as Analyze (path detection)",
+        "extract-context.sh is run targeting ./src/api",
+        "Key files in the folder are read for context",
+        "Advisors evaluate the API code/architecture",
+        "Synthesis includes specific findings about the code"
+      ],
+      "assertions": [
+        "Intent classified as Analyze via path detection",
+        "extract-context.sh targets ./src/api",
+        "Key files in folder read for context",
+        "Advisors evaluate API code/architecture",
+        "Synthesis includes specific code findings"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 25,
+      "prompt": "/tab \"quero evoluir esse MVP pra produção, já tenho 50 clientes usando\"",
+      "expected_output": "Intent detected as Continue/Evolve. Auto-detects current stack, classifies as MVP→Full transition, Champions propose evolution paths",
+      "files": [],
+      "expectations": [
+        "Intent is classified as Continue/Evolve",
+        "Current stage classified as MVP with 50 active customers",
+        "Champions propose evolution paths to production-readiness",
+        "Focus on scaling, reliability, monitoring, security hardening",
+        "Synthesis includes evolution roadmap with priorities",
+        "Output in pt-BR"
+      ],
+      "assertions": [
+        "Intent classified as Continue/Evolve",
+        "Stage classified as MVP with 50 active customers",
+        "Champions propose evolution paths to production",
+        "Focus on scaling, reliability, monitoring, security",
+        "Evolution roadmap with priorities in synthesis",
+        "Output in pt-BR"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 26,
+      "prompt": "/tab \"vamos iniciar um projeto de CLI tool em Rust para processar logs\"",
+      "expected_output": "Intent detected as Create. Pre-fills context with Rust CLI for log processing, asks targeted follow-up questions",
+      "files": [],
+      "expectations": [
+        "Intent is classified as Create",
+        "Rust is noted as a pre-selected language preference",
+        "Context extraction focuses on: log formats, scale, team experience, distribution",
+        "Champions propose different Rust toolchain combinations (clap+tokio vs alternatives)",
+        "Output in pt-BR"
+      ],
+      "assertions": [
+        "Intent classified as Create",
+        "Rust noted as pre-selected language",
+        "Context extraction focuses on log formats, scale, experience, distribution",
+        "Champions propose Rust toolchain combinations (clap+tokio vs alternatives)",
+        "Output in pt-BR"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 27,
+      "prompt": "What's the best way to structure my React components?",
+      "should_trigger": false,
+      "reason": "Near-miss: contains 'best way' keyword but is about code organization, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 28,
+      "prompt": "How does Next.js server-side rendering work?",
+      "should_trigger": false,
+      "reason": "Near-miss: mentions a framework but is an explanation request, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 29,
+      "prompt": "Compare the performance of these two functions",
+      "should_trigger": false,
+      "reason": "Near-miss: contains 'compare' keyword but is a code-level performance comparison, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 30,
+      "prompt": "Should I use async/await or callbacks here?",
+      "should_trigger": false,
+      "reason": "Near-miss: contains 'should I use' pattern but is about code patterns, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 31,
+      "prompt": "What do you think about this algorithm implementation?",
+      "should_trigger": false,
+      "reason": "Near-miss: contains 'what do you think' trigger but is a code review request, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 32,
+      "prompt": "Help me plan the migration of this data from CSV to the database",
+      "should_trigger": false,
+      "reason": "Near-miss: contains 'plan' and 'migration' keywords but is about data implementation, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 33,
+      "prompt": "Is this a good approach for handling errors in my API?",
+      "should_trigger": false,
+      "reason": "Near-miss: contains 'is this good' pattern but is a code review request, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 34,
+      "prompt": "Analyze the complexity of this sorting function",
+      "should_trigger": false,
+      "reason": "Near-miss: contains 'analyze' trigger but is about algorithmic analysis, not a technology decision",
+      "expected_output": "The skill should NOT activate for this prompt",
+      "files": [],
+      "expectations": []
+    },
+    {
+      "id": 35,
+      "prompt": "/tab \"analise esse projeto e me diga o que melhorar\"",
+      "expected_output": "Analyze mode — reads fixture files, detects Express + Prisma + TypeScript stack, advisors evaluate architecture and security. Identifies hardcoded JWT secret, missing input validation, no pagination, no auth on delete endpoint.",
+      "files": [
+        "evals/fixtures/simple-node-api/"
+      ],
+      "expectations": [
+        "Intent classified as Analyze",
+        "Stack detected: Express + Prisma + TypeScript",
+        "Security issue identified: hardcoded JWT secret in users.ts",
+        "Missing input validation on POST /products identified",
+        "No auth check on DELETE /products/:id identified",
+        "No pagination on GET /users identified",
+        "Advisors evaluate from independent dimensions"
+      ],
+      "assertions": [
+        "Intent classified as Analyze",
+        "Stack detected: Express + Prisma + TypeScript",
+        "Hardcoded JWT secret flagged as security issue",
+        "Missing input validation flagged",
+        "Missing auth on delete endpoint flagged",
+        "Missing pagination flagged",
+        "Independent advisor evaluations produced"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 36,
+      "prompt": "/tab \"quero evoluir essa CLI tool, adicionar suporte a múltiplos backends e plugins\"",
+      "expected_output": "Continue/Evolve mode — detects Python CLI with Click + httpx + Rich, proposes evolution paths for plugin architecture.",
+      "files": [
+        "evals/fixtures/python-cli/"
+      ],
+      "expectations": [
+        "Intent classified as Continue/Evolve",
+        "Stack detected: Python with Click, httpx, Rich",
+        "Champions propose plugin architecture strategies",
+        "Multiple backend support is central to proposals",
+        "Evolution path from current single-backend to extensible system",
+        "Output in pt-BR"
+      ],
+      "assertions": [
+        "Intent classified as Continue/Evolve",
+        "Stack detected: Python with Click, httpx, Rich",
+        "Plugin architecture strategies proposed by champions",
+        "Multiple backend support addressed",
+        "Evolution path from single-backend to extensible",
+        "Output in pt-BR"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 37,
+      "prompt": "/tab \"analise esse projeto, tá uma bagunça e preciso saber por onde começar a arrumar\"",
+      "expected_output": "Analyze/Improve mode — detects messy Node.js project with outdated deps, SQL injection, hardcoded credentials, mixed databases, deprecated packages. Prioritized improvement recommendations.",
+      "files": [
+        "evals/fixtures/messy-project/"
+      ],
+      "expectations": [
+        "Intent classified as Analyze or Improve",
+        "SQL injection vulnerability in /users endpoint identified",
+        "Hardcoded database credentials flagged",
+        "Deprecated packages identified (request, moment)",
+        "Mixed database usage (MySQL + MongoDB) questioned",
+        "Security vulnerabilities prioritized over code quality issues",
+        "Improvement roadmap with priority order provided"
+      ],
+      "assertions": [
+        "SQL injection in /users endpoint identified",
+        "Hardcoded database credentials flagged",
+        "Deprecated packages (request, moment) identified",
+        "Mixed MySQL + MongoDB usage questioned",
+        "Security issues prioritized over code quality",
+        "Improvement roadmap with priorities provided"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 38,
+      "prompt": "/tab \"quero migrar esse projeto para algo mais moderno e seguro\"",
+      "expected_output": "Improve mode — detects messy project, Champions propose modernization strategies (not just 'use React'). Focus on security fixes, dependency updates, architecture cleanup.",
+      "files": [
+        "evals/fixtures/messy-project/"
+      ],
+      "expectations": [
+        "Intent classified as Improve",
+        "Current stack auto-detected (Express, mongoose, mysql, ejs)",
+        "Champions propose improvement strategies, not full rewrites",
+        "Security fixes (SQL injection, credentials) are top priority",
+        "Dependency modernization path (request->fetch/axios, moment->date-fns/dayjs)",
+        "Database consolidation strategy proposed",
+        "Output in pt-BR"
+      ],
+      "assertions": [
+        "Intent classified as Improve",
+        "Current stack detected: Express, mongoose, mysql, ejs",
+        "Champions propose improvements, not full rewrites",
+        "Security fixes prioritized (SQL injection, credentials)",
+        "Dependency modernization path proposed",
+        "Database consolidation strategy addressed",
+        "Output in pt-BR"
+      ],
+      "should_trigger": true
+    },
+    {
+      "id": 39,
+      "should_trigger": true,
+      "prompt": "Compare FastAPI vs Django for a REST API with background tasks",
+      "note": "Test with degraded MCP — verify research fallback protocol activates gracefully",
+      "expected_output": "TAB flow proceeds even if MCP tools fail. Claims are marked with uncertainty flags. Session does not halt.",
+      "files": [],
+      "expectations": [
+        "Research fallback protocol activated when MCP tools are unavailable",
+        "Claims marked with [not verified] or [model knowledge] when research fails",
+        "Session proceeds to completion without halting",
+        "At least 2 champions present proposals",
+        "Synthesis produced despite degraded research"
+      ],
+      "assertions": [
+        "Research fallback protocol activated",
+        "Unverified claims flagged appropriately",
+        "Session completes without halting",
+        "At least 2 champion proposals",
+        "Synthesis produced despite degraded research"
+      ]
+    },
+    {
+      "id": 40,
+      "should_trigger": true,
+      "prompt": "/tab \"what database should I use for 1M daily events with time-range queries?\"",
+      "note": "English input — verify language detection produces English output throughout",
+      "expected_output": "Full TAB flow in English. Language detection identifies English from first message. All output in English except technical terms which are already English.",
+      "files": [],
+      "expectations": [
+        "Output entirely in English",
+        "Language detection correctly identifies English",
+        "Standard TAB flow proceeds (research, champions, advisors, synthesis)",
+        "Time-series database alternatives compared",
+        "Throughput of 1M daily events addressed"
+      ],
+      "assertions": [
+        "Output in English",
+        "Language detection correct",
+        "Standard TAB flow proceeds",
+        "Time-series database alternatives compared",
+        "1M daily events throughput addressed"
+      ]
+    },
+    {
+      "id": 41,
+      "should_trigger": true,
+      "prompt": "Preciso escolher um message broker para comunicação entre microsserviços. Time de 4 devs, experiência com Node.js e Python. Esperamos 50K mensagens por minuto no pico.",
+      "note": "Word budget compliance test — verify champion, advisor, and synthesis outputs respect documented word limits",
+      "expected_output": "Standard mode. Champion outputs ~600 words each, Advisor outputs ~400 words each, Synthesis ~1200 words. No phase exceeds documented maximum.",
+      "files": [],
+      "expectations": [
+        "Champion presentations do not exceed ~900 words each",
+        "Advisor evaluations do not exceed ~550 words each",
+        "Synthesis output is proportional to Standard mode (~1200 words)",
+        "At least 3 champions (RabbitMQ, Kafka, NATS or similar)",
+        "Message throughput of 50K/min addressed in benchmarks"
+      ],
+      "assertions": [
+        "Champion presentations within word budget (~600-900 words)",
+        "Advisor evaluations within word budget (~400-550 words)",
+        "Synthesis proportional to Standard mode",
+        "At least 3 champions for message brokers",
+        "50K messages/min throughput addressed"
+      ]
+    },
+    {
+      "id": 42,
+      "should_trigger": true,
+      "prompt": "Comparar bancos de dados para uma aplicação de saúde digital. Armazenamos prontuários médicos e precisamos estar em conformidade com HIPAA e LGPD. Time de 4 devs. Esperamos 10k consultas por dia.",
+      "note": "T1 trigger — critical compliance dimension (HIPAA/LGPD) must be detected post-baseline research, forcing directed re-research and logging a budget_adjustments entry with reason 'T1'.",
+      "expected_output": "Standard/Complete mode. Baseline research focuses on throughput/versioning. Moderator detects HIPAA/LGPD was not covered, fires T1 trigger (+3 queries), launches directed researcher for encryption-at-rest, audit logs, BAA support. telemetry.json.budget_adjustments[] contains one T1 entry.",
+      "files": [],
+      "expectations": [
+        "HIPAA and LGPD compliance dimensions explicitly evaluated per champion",
+        "Moderator acknowledges the dimension gap and announces a budget expansion",
+        "telemetry.json.budget_adjustments[] includes an entry with reason 'T1' (or label 'critical-dimension')",
+        "Champions address encryption-at-rest, audit logging, and vendor BAA status",
+        "Output in pt-BR"
+      ],
+      "assertions": [
+        "HIPAA+LGPD compliance evaluated per champion",
+        "Moderator announces budget expansion for dimension gap",
+        "budget_adjustments[] logs T1 entry",
+        "Encryption-at-rest and audit logging addressed",
+        "Output in pt-BR"
+      ]
+    },
+    {
+      "id": 43,
+      "should_trigger": true,
+      "prompt": "Quero usar Bun como runtime do backend. Time de 3 devs senior em Node. Projeto é um SaaS MVP com 5k usuários esperados no primeiro ano.",
+      "note": "Vanguard timeline — assessment of Bun should query vanguard-timeline; if cached within 90 days, synthesis reuses the assessment with [timeline-cached, N days] flag.",
+      "expected_output": "Standard mode. Champions include Bun as Vanguard. Moderator queries the Vanguard timeline. If cached assessment exists and is <90 days old, Vanguard's readiness_assessment reuses that data with [timeline-cached] annotation. If not cached, fresh assessment is performed and appended to the ledger.",
+      "files": [],
+      "expectations": [
+        "Bun is classified as the Vanguard in the champion lineup",
+        "Vanguard's readiness_assessment is populated (verdict, maturity_estimate_months, blockers)",
+        "If the timeline ledger has a recent entry for Bun, the assessment carries a [timeline-cached] marker with age in days",
+        "If fresh, the assessment is written back via vanguard-timeline append",
+        "Team's Node experience is factored into the adoption path"
+      ],
+      "assertions": [
+        "Bun is the Vanguard",
+        "readiness_assessment fields populated",
+        "timeline-cached marker present if ledger hit, else fresh entry appended",
+        "Node-to-Bun adoption path discussed"
+      ]
+    },
+    {
+      "id": 44,
+      "should_trigger": true,
+      "prompt": "Compare bancos vetoriais para RAG: Pinecone vs Weaviate vs Qdrant vs pgvector. Time de 2 devs. Escala inicial de 500k documentos.",
+      "note": "T3 trigger — with MCP in degraded mode (no perplexity/context7), unverified-claim ratio is likely to exceed 30%, which should fire a T3 expansion (+2) and be logged.",
+      "expected_output": "Standard mode with degraded MCP. Many claims carry [low-conf]/[unverified] tags. At end of research phase, Moderator detects unverified_ratio > 0.30 and fires T3. budget_adjustments[] contains T3 entry; next phase operates with expanded budget.",
+      "files": [],
+      "expectations": [
+        "At least 4 champions (one per vector DB)",
+        "Claims are tagged with confidence levels, with a visible share of [low-conf] or [unverified]",
+        "If unverified_ratio exceeds 30% at end of any phase, telemetry.json.budget_adjustments[] logs a T3 entry",
+        "The synthesis unverified_claims[] array is populated with expected_source for each item",
+        "500k document scale is addressed in benchmarks"
+      ],
+      "assertions": [
+        "4 champions for vector DBs",
+        "Confidence tags applied to numeric claims",
+        "T3 budget_adjustment logged when unverified ratio exceeds 30%",
+        "unverified_claims[] populated with expected_source",
+        "500k document scale addressed"
+      ]
+    },
+    {
+      "id": 45,
+      "should_trigger": true,
+      "prompt": "/tech-advisory-board:rechallenge .tab/decisions/0001-postgres-timescaledb.md",
+      "note": "Rechallenge verdict 'still-valid' — original ADR is 4 months old, Postgres+TimescaleDB still outperforms alternatives, no material changes. Skill appends a Rechallenge Log entry but does NOT generate a new ADR.",
+      "expected_output": "Rechallenge session runs compressed flow (delta research → auditor → 3 advisors). Verdict derivation yields still-valid: zero material changes, no critical auditor findings, advisors averaged >=7 on keep-primary. Original ADR is patched with a Rechallenge Log section dated today; status remains 'accepted'; index.md Status column gains '(reviewed YYYY-MM-DD)' suffix. A minimal synthesis.json is written to the rechallenge session dir.",
+      "files": [],
+      "expectations": [
+        "Compressed flow executes: delta research, auditor, 3 advisors (Maintenance, Evolution, Cost)",
+        "Verdict is 'still-valid' given no material changes",
+        "Original ADR gains a Rechallenge Log section (section is created if absent, appended if present)",
+        "Original ADR status line is NOT changed",
+        "No new ADR is generated in .tab/decisions/",
+        ".tab/index.md Status for the ADR reflects the reviewed-date suffix",
+        "A minimal synthesis.json is emitted under the rechallenge session dir"
+      ],
+      "assertions": [
+        "Compressed flow: delta research, auditor, 3 advisors",
+        "Verdict still-valid",
+        "Rechallenge Log section appended to original ADR",
+        "Original status unchanged",
+        "No new ADR generated",
+        "Index status shows reviewed-date suffix",
+        "Minimal synthesis.json emitted"
+      ]
+    },
+    {
+      "id": 46,
+      "should_trigger": true,
+      "prompt": "/tech-advisory-board:rechallenge .tab/decisions/0002-monolith-rails-api.md",
+      "note": "Rechallenge verdict 'needs-revision' — original decision still wins on weighted score but delta research surfaced changes (new CVE on the primary, vendor pricing shift). Risks and migration path must be updated without changing status.",
+      "expected_output": "Rechallenge session runs compressed flow. Verdict is needs-revision: material changes exist but keep-primary still wins on weighted score. Original ADR gains a 'Revision Notes' section with updated risks/mitigations/pivot triggers. Status remains 'accepted'. .tab/index.md shows 'accepted (revised YYYY-MM-DD)' annotation. No new ADR is generated.",
+      "files": [],
+      "expectations": [
+        "Verdict is 'needs-revision' given material changes but primary still wins",
+        "Original ADR gains a Revision Notes section (dated)",
+        "Original ADR status stays 'accepted'",
+        "No new ADR is generated",
+        ".tab/index.md shows 'accepted (revised YYYY-MM-DD)' or equivalent annotation",
+        "Updated risks/mitigations/pivot triggers are captured either in the ADR revision notes or in the rechallenge session's rechallenge-verdict.md",
+        "supersede-adr is invoked with --mode revision"
+      ],
+      "assertions": [
+        "Verdict needs-revision",
+        "Revision Notes section appended",
+        "Status remains accepted",
+        "No new ADR generated",
+        "Index shows revised annotation",
+        "Risks/mitigations updated in revision notes or verdict doc",
+        "supersede-adr invoked with --mode revision"
+      ]
+    },
+    {
+      "id": 47,
+      "should_trigger": true,
+      "prompt": "/tech-advisory-board:rechallenge .tab/decisions/0003-react-frontend.md",
+      "note": "Rechallenge verdict 'supersede' — an alternative from the original shortlist (SolidJS) has materially matured in the 12 months since the ADR. Advisors agree switch-to-top-alternative now scores >= keep-primary + 1. A new ADR is generated and the old one marked superseded.",
+      "expected_output": "Rechallenge session runs compressed flow. Auditor surfaces a critical finding about maintainer churn on the primary. Advisors converge on switch-to-alternative (SolidJS). Verdict: supersede. A new synthesis.json is composed recommending SolidJS, new-adr writes ADR 0004, supersede-adr marks 0003 as 'superseded-by: 0004'. Both ADRs visible in index.md with correct statuses.",
+      "files": [],
+      "expectations": [
+        "Verdict is 'supersede' given alternative now outscores primary or critical auditor finding",
+        "New synthesis.json is written with session.mode = 'Rechallenge' and consumable_hints.supersedes_adr set",
+        "new-adr generates a new NNNN-slug.md in .tab/decisions/",
+        "supersede-adr rewrites old ADR's status line to 'superseded-by: NNNN (YYYY-MM-DD)'",
+        "Old ADR gains a 'Superseded By' section linking to the new ADR",
+        ".tab/index.md shows both rows with correct statuses",
+        "New ADR's rationale cites the specific delta findings that justified the switch"
+      ],
+      "assertions": [
+        "Verdict supersede",
+        "New synthesis.json with Rechallenge mode and supersedes_adr hint",
+        "New ADR generated via new-adr",
+        "Old ADR status rewritten to superseded-by: NNNN",
+        "Superseded By section appended to old ADR",
+        "Index shows both ADRs with correct statuses",
+        "New rationale cites delta findings"
+      ]
+    },
+    {
+      "id": 48,
+      "should_trigger": false,
+      "prompt": "/tech-advisory-board:tab \"Monolith vs microservices for a 3-person team\"",
+      "note": "Regression test for the Stop-gate (validate-on-stop.sh). User interrupts the session before Phase 10 Synthesis completes — no synthesis.json has been produced yet. The Stop hook MUST exit silently (exit 0) and NOT block the stop, because there is nothing to validate. If the gate blocks a legitimate interruption, that is a regression.",
+      "expected_output": "Session starts normally, Moderator begins complexity classification and research phases. User interrupts before synthesis is written. validate-on-stop.sh detects no synthesis.json in the newest session directory and exits 0 silently. The session stops cleanly without a {\"decision\":\"block\"} payload. state.json remains resumable for a later /tech-advisory-board:tab invocation.",
+      "files": [],
+      "expectations": [
+        "No synthesis.json exists in .tab/sessions/<sid>/ when the user interrupts",
+        "scripts/validate-on-stop.sh exits 0 (not 2) and emits no JSON",
+        "The session stops without a block-reason feedback message",
+        "state.json and state-full.json persist the incomplete-session snapshot",
+        "detect-interrupted.sh on the next SessionStart surfaces the session as resumable"
+      ],
+      "assertions": [
+        "Stop hook does not block when synthesis.json is absent",
+        "Interrupted session persists resume-capable state",
+        "Next SessionStart detects the session as resumable within the 24h window"
+      ]
+    },
+    {
+      "id": 49,
+      "should_trigger": true,
+      "prompt": "/tech-advisory-board:tab \"Escolha entre NATS, Redis Streams e Kafka para event bus de um SaaS multi-tenant com 200 RPS de picos. Time Go senior (3 pessoas), stack já em AWS.\"",
+      "note": "MCP down mid-session — perplexity returns errors and context7 times out after Phase 1 baseline research completes (during champion directed-research). TAB must degrade gracefully: mark affected claims [unverified], fall back to brave-search/WebSearch for remaining queries, and surface the outage in synthesis.unverified_claims[] and telemetry.",
+      "expected_output": "Standard mode. Phase 1 baseline research completes with MCPs healthy. During champion directed-research (Phase 4), perplexity_search/perplexity_research calls begin erroring and context7 query-docs times out. Champions continue with brave-search and WebSearch fallback, tagging any claim that would have required perplexity/context7 as [unverified] or [low-conf]. Moderator detects unverified_ratio > 0.30, fires T3 (+2). telemetry.json.budget_adjustments[] logs the T3 entry; telemetry.json.mcp_errors[] (or equivalent source_status field) records the outage with timestamp and server name. synthesis.json.unverified_claims[] is populated with expected_source=perplexity or expected_source=context7 per item. synthesis.json.risks[] includes an entry flagging research-depth degradation. Final report.md appendix lists every [unverified] claim. Recommendation still emitted but with a caveat banner noting MCP degradation.",
+      "files": [],
+      "expectations": [
+        "Phase 1 baseline research completes normally before the MCP outage begins",
+        "Champions tolerate perplexity errors and context7 timeouts without aborting the session",
+        "Champions fall back to mcp__brave-search__brave_web_search and/or WebSearch for remaining queries",
+        "Every claim that would have required perplexity or context7 is tagged [unverified] or [low-conf] inline in prose",
+        "synthesis.json.unverified_claims[] is non-empty and every entry carries expected_source set to 'perplexity' or 'context7'",
+        "telemetry.json.budget_adjustments[] contains at least one entry with reason 'T3' (unverified ratio > 30%)",
+        "telemetry records the MCP outage (mcp_errors[], source_status, or equivalent) with the failing server name and an ISO-8601 timestamp",
+        "synthesis.json.risks[] includes a risk entry describing research-depth degradation from MCP unavailability",
+        "Final recommendation is still emitted; no session abort, no empty synthesis",
+        "report.md appendix (Data Requiring Independent Verification) lists every [unverified] claim from the session",
+        "Moderator announces the degraded mode to the user in the session language before closing Phase 4",
+        "validate-claims.sh warning is NOT emitted for 'unverified_ratio > 0.30 with no T3 expansion' (i.e. T3 was correctly fired)"
+      ],
+      "assertions": [
+        "Session does not abort when perplexity errors and context7 times out mid-session",
+        "Champions fall back to brave-search or WebSearch for remaining queries",
+        "synthesis.json.unverified_claims[] non-empty with expected_source in {perplexity, context7}",
+        "telemetry.json.budget_adjustments[] logs a T3 entry",
+        "telemetry records MCP outage with server name and timestamp",
+        "synthesis.json.risks[] flags research-depth degradation",
+        "Inline [unverified]/[low-conf] tags applied to affected claims",
+        "report.md appendix enumerates every [unverified] claim",
+        "Moderator announces degraded mode to the user",
+        "Final recommendation still emitted despite degradation",
+        "validate-claims.sh does not warn about missing T3 expansion"
+      ]
+    },
+    {
+      "id": 50,
+      "should_trigger": true,
+      "prompt": "/tech-advisory-board:tab \"Estou desenhando a arquitetura completa de um marketplace B2B multi-região: escolha de banco (Postgres particionado vs CockroachDB vs Spanner), estratégia de replicação cross-region, message bus (Kafka vs Pulsar vs NATS JetStream), gateway (Kong vs Envoy vs APISIX), e observabilidade (Grafana stack vs Datadog vs Honeycomb). Time de 8 devs, budget de infra alto, go-live em 9 meses. Quero modo Complete+ com cross-examination profunda entre os champions e advisors independentes para cada dimensão.\"",
+      "note": "Budget burst mid-debate — forced Complete+ session with ~5 champions across 5 dimensions plus per-dimension advisors drives cumulative cost past max_cost_per_session_usd (default $5) during champion cross-examination, before synthesis is written. Tests that (a) monitor emits budget-exceeded, (b) budget-aware policy downgrades remaining Champion/Auditor spawns to sonnet when budget_remaining_pct < 30, (c) Moderator enters degraded-finalization instead of continuing to spend, and (d) Stop gate records the abort cleanly without blocking resume.",
+      "expected_output": "Complete+ session starts with opus Champions. After Phase 1 ends, telemetry.totals.cost_usd crosses warn_at_usd ($3) → monitor emits one budget-warn NDJSON line and Moderator logs a warnings_issued entry. During champion cross-examination, cumulative cost crosses max_cost_per_session_usd ($5) → monitor emits exactly one budget-exceeded NDJSON line. model-policy.sh invocations for remaining Champion/Auditor spawns return model=sonnet with source=signal and reason mentioning 'budget ... < 30 → downgrade'. Moderator aborts the live debate, enters degraded-finalization, and emits a synthesis.json from partial data with session.mode='Complete+', session.completed_at set, and a consumable_hints.degraded_finalization=true marker citing 'budget-exceeded'. state.json.budget_consumed.cost_usd is >= max_cost_per_session_usd at termination. Stop gate (validate-on-stop.sh) runs, validators pass against the degraded synthesis (or fail with specific, non-budget reasons), and the session exits without a generic 'missing synthesis' block.",
+      "files": [],
+      "expectations": [
+        "Session is classified as Complete+ (user override respected)",
+        ".tab/sessions/<sid>/timeline-events.ndjson contains exactly one {\"event\":\"budget-warn\"} line with cost_usd >= warn_at_usd and < max_cost_usd",
+        ".tab/sessions/<sid>/timeline-events.ndjson contains exactly one {\"event\":\"budget-exceeded\"} line emitted during champion-debate (phase is 'champion-debate' or 'cross-examination' on the prior snapshot, NOT 'synthesis')",
+        "state.json.budget_consumed.cost_usd >= config_snapshot.budget.max_cost_per_session_usd at the moment budget-exceeded is emitted",
+        "After budget-exceeded fires, at least one subsequent model-policy.sh invocation for role 'champion' or 'auditor' returns model='sonnet' with source='signal' and reason matching 'budget .* < 30 → downgrade'",
+        "telemetry.json.warnings_issued[] contains an entry referencing warn_at_usd crossing AND an entry referencing max_cost_per_session_usd crossing",
+        "Moderator does NOT launch additional opus Champion spawns after the budget-exceeded event (verified via state-full.json.subagents_invoked[].model for entries with started_at > budget-exceeded.at)",
+        "synthesis.json is written despite the abort; session.completed_at is a non-null ISO-8601 timestamp; session.mode == 'Complete+'",
+        "synthesis.json.consumable_hints.degraded_finalization is true (or an equivalent flag) and references reason 'budget-exceeded'",
+        "synthesis.json.unverified_claims[] is populated for any dimension that did not complete its advisor pass, each with expected_source explaining what would have been researched",
+        "validate-on-stop.sh does not emit a {\"decision\":\"block\"} payload solely because the session aborted on budget — either validators pass against the degraded synthesis or the block reason cites a specific structural failure unrelated to the abort",
+        "state.json and state-full.json persist a resumable snapshot so detect-interrupted.sh surfaces the session on the next SessionStart within the 24h window",
+        "Output in pt-BR"
+      ],
+      "assertions": [
+        "Session classified as Complete+ per user override",
+        "timeline-events.ndjson contains exactly one budget-warn event with warn_at_usd <= cost_usd < max_cost_usd",
+        "timeline-events.ndjson contains exactly one budget-exceeded event emitted during champion-debate/cross-examination, not synthesis",
+        "state.json.budget_consumed.cost_usd >= max_cost_per_session_usd at abort",
+        "Post-exceeded model-policy.sh invocations downgrade champion/auditor to sonnet with source=signal",
+        "telemetry.json.warnings_issued[] logs both warn_at and max_cost crossings",
+        "No opus Champion subagent started_at is later than budget-exceeded.at",
+        "synthesis.json is written with session.completed_at set and session.mode='Complete+'",
+        "synthesis.json.consumable_hints.degraded_finalization=true citing budget-exceeded",
+        "unverified_claims[] populated for dimensions that lost their advisor pass, each with expected_source",
+        "validate-on-stop.sh does not block solely on the budget abort",
+        "state persists as resumable; detect-interrupted.sh lists the session within 24h",
+        "Output in pt-BR"
+      ]
+    },
+    {
+      "id": 51,
+      "should_trigger": true,
+      "prompt": "/tech-advisory-board:tab \"Vector DB choice for a 10M-embedding RAG pipeline serving 200 concurrent users\" — projeto em estágio MVP, time de 3 devs backend Python, budget de infra R$1500/mês. Preciso de uma decisão fundamentada.",
+      "note": "Failure mode: Opus 4.7 unavailable mid-session (API rate limit / 429 from upstream). Champion and Auditor are pinned to claude-opus-4-7 via frontmatter. When the Moderator spawns the Auditor in Phase 11 (Complete mode) the spawn returns an upstream capacity error. scripts/model-policy.sh must resolve a sonnet fallback with source=signal and reason containing 'opus-unavailable'. The fallback MUST be telemetered and the Auditor must self-disclose the degraded rigor in its findings — never silent.",
+      "expected_output": "Complete mode session runs through Phases 1-10 normally with Champion and Auditor on claude-opus-4-7. At the Auditor spawn in Phase 11, upstream returns a 429/overloaded_error for Opus. The Moderator (or inject-tab-context.sh) re-pipes the decision envelope with an additional opus_available=false signal into scripts/model-policy.sh; the engine downgrades the auditor role to sonnet and returns {source:'signal', reason:'opus-unavailable → fallback sonnet'}. telemetry.json.model_fallbacks[] appends one entry with {role:'auditor', from:'claude-opus-4-7', to:'sonnet', reason:'opus-unavailable', phase:'audit', ts:<ISO-8601>}. telemetry.json.model_policy_decisions[] appends the resolution with source='signal'. The Auditor runs on sonnet and emits synthesis.json.auditor_findings[] including at least one severity='informational' finding whose note states the audit ran on a degraded model and recommends a rechallenge when Opus returns. synthesis.json.provenance.model_resolutions[] records the auditor resolution with source='signal' and reason referencing opus-unavailable. Session completes — no silent downgrade.",
+      "files": [],
+      "expectations": [
+        "Champion and Auditor initial spawns target claude-opus-4-7 (frontmatter pin honored)",
+        "When upstream returns rate-limit / overloaded_error for Opus, the spawn is retried against scripts/model-policy.sh with an opus_available=false (or equivalent) signal",
+        "scripts/model-policy.sh returns {model:'sonnet', source:'signal', reason:<contains 'opus-unavailable'>} for role=auditor",
+        "telemetry.json.model_fallbacks[] contains exactly one entry with from='claude-opus-4-7', to='sonnet', role='auditor', reason='opus-unavailable' (or semantically equivalent)",
+        "telemetry.json.model_policy_decisions[] contains the matching resolution with source='signal' (not 'env' and not 'mode-override')",
+        "The Auditor subagent runs on sonnet and still produces a valid audit JSON block",
+        "synthesis.json.auditor_findings[] includes at least one finding with severity='informational' whose description explicitly notes the audit ran on a degraded model (sonnet instead of Opus) and that adversarial rigor is reduced",
+        "The informational finding recommends a rechallenge (or re-audit) once Opus capacity returns",
+        "synthesis.json.provenance (or equivalent provenance block) records the auditor model resolution with source='signal' and reason referencing opus-unavailable",
+        "The session does NOT abort — it completes Phase 12 Synthesis with the degraded audit disclosed",
+        "No silent fallback: if the fallback is not logged to telemetry AND not disclosed in auditor_findings, the eval fails"
+      ],
+      "assertions": [
+        "Champion/Auditor frontmatter pin to claude-opus-4-7 honored on first spawn",
+        "scripts/model-policy.sh resolves auditor → sonnet with source=signal and reason='opus-unavailable'",
+        "telemetry.json.model_fallbacks[] has entry {role:'auditor', from:'claude-opus-4-7', to:'sonnet', reason:'opus-unavailable'}",
+        "telemetry.json.model_policy_decisions[] records the resolution with source=signal",
+        "synthesis.json.auditor_findings[] contains informational finding noting degraded-audit (sonnet fallback)",
+        "Degraded-audit finding recommends rechallenge when Opus returns",
+        "synthesis.json provenance records source=signal, reason mentions opus-unavailable for auditor",
+        "Session completes (no abort) despite Opus unavailability",
+        "Fallback is never silent — both telemetry AND auditor_findings must disclose it"
+      ]
+    },
+    {
+      "id": 52,
+      "should_trigger": true,
+      "prompt": "/tech-advisory-board:tab \"Compare Redis vs KeyDB vs Dragonfly for a 50K ops/s cache layer\"",
+      "note": "Failure-mode: python3 absent from PATH. User runs TAB on a minimal container (e.g., Alpine without python3) or inside a CI sandbox where python3 was not installed. Nearly every TAB shell script checks `command -v python3` and bifurcates: hook/monitor scripts exit 0 silently to avoid breaking the host, while user-facing bin commands print 'python3 required' to stderr and exit 1. The plugin manifest itself parses fine (harness does that), so the skill loads, but any step that calls a bin command must surface an actionable error rather than producing corrupt state or a half-written synthesis.json.",
+      "expected_output": "Skill loads (plugin manifest parsing does not require python3). Any attempt to run a bin command (init-dir, compute-cost, new-adr, cache, score-zscore, record-outcome, schedule-rechallenge, vanguard-timeline, supersede-adr, resume-session, check-mcps) emits 'python3 required' to stderr and exits 1. Hook scripts (on-instructions-loaded, update-telemetry, statusline, monitor, validate-on-stop, flush-state, on-reactive-change, on-stop-failure, on-task-created, detect-interrupted, inject-tab-context, rehydrate-state, model-policy) exit 0 silently without emitting JSON or blocking the host. The Moderator detects the first bin-command failure, halts the TAB flow cleanly with an actionable message pointing the user to install python3 (>=3.8), and does not write a partial synthesis.json. No ADR is generated under .tab/decisions/.",
+      "files": [],
+      "expectations": [
+        "Plugin manifest loads successfully without python3 (harness-level parse does not depend on it)",
+        "Every bin/ command invoked during the flow exits non-zero with 'python3 required' on stderr — specifically init-dir, new-adr, compute-cost, cache, score-zscore, record-outcome, schedule-rechallenge, vanguard-timeline, supersede-adr, resume-session, check-mcps",
+        "Hook scripts exit 0 silently and emit NO JSON payload to stdout when python3 is missing — specifically on-instructions-loaded.sh, update-telemetry.sh, update-telemetry-subagent.sh, statusline.sh, monitor.sh, validate-on-stop.sh, flush-state.sh, on-reactive-change.sh, on-stop-failure.sh, on-task-created.sh, detect-interrupted.sh, inject-tab-context.sh, rehydrate-state.sh, model-policy.sh, validate-claims.sh, validate-synthesis-json.sh",
+        "validate-on-stop.sh does NOT emit a {\"decision\":\"block\"} payload (it exits 0, matching the ID-48 contract for the absent-synthesis case)",
+        "Monitor emits no heartbeat events beyond whatever was already buffered (documented behavior per docs/TROUBLESHOOTING.md)",
+        "Moderator surfaces the first bin-command failure to the user with an actionable remediation (e.g., 'install python3 >= 3.8' or 'add python3 to PATH'), not a cryptic exit-code dump",
+        "Moderator halts the flow before any write-path that would create a partial artifact — no synthesis.json, no ADR, no telemetry.json partial write",
+        "No corrupt or half-written .tab/sessions/<sid>/state.json, state-full.json, synthesis.json, or telemetry.json is left on disk after the failure",
+        "No new file is created under .tab/decisions/ (no ADR NNNN-slug.md)",
+        "The remediation guidance references docs/TROUBLESHOOTING.md or a direct install hint, not an internal stack trace"
+      ],
+      "assertions": [
+        "Plugin loads (manifest parse succeeds) even without python3",
+        "bin/ commands fail loudly: exit 1 with 'python3 required' on stderr",
+        "Hook/monitor scripts fail silently: exit 0 with no stdout JSON",
+        "validate-on-stop.sh exits 0 (does NOT emit decision:block), consistent with ID-48",
+        "Moderator surfaces an actionable 'install python3' message after the first bin-command failure",
+        "Flow halts before any synthesis.json or ADR write path is reached",
+        "No partial/corrupt state.json, state-full.json, synthesis.json, or telemetry.json persisted",
+        "No ADR file created under .tab/decisions/",
+        "Remediation guidance cites docs/TROUBLESHOOTING.md or an explicit install instruction"
+      ]
+    },
+    {
+      "id": 53,
+      "should_trigger": true,
+      "prompt": "/tech-advisory-board:tab \"Compare Postgres vs MySQL vs CockroachDB for a multi-region fintech ledger\"",
+      "note": "Forced compaction during cross-examination — host triggers a context compaction while Phase 4 (cross-exam) is in flight. PreCompact (scripts/flush-state.sh) MUST detect the cross-exam marker in state.json.phase_completed/next_phase and emit {\"decision\":\"block\",\"reason\":\"...\"} so the host defers compaction past the critical section. If the host forces compaction anyway (hard-limit on Claude Code >= v2.1.105), PostCompact (scripts/rehydrate-state.sh) MUST inject a digest containing session_id, mode, phase_completed, next_phase, session_language, and top claims sorted by confidence — enough for the Moderator to resume cross-exam without re-asking questions already answered. InstructionsLoaded with matcher=compact (scripts/on-instructions-loaded.sh) MUST additionally re-inject the locked session_language from state-full.session_language (§3.5.3).",
+      "expected_output": "Standard/Complete mode session advances to Phase 4 champion cross-examination. Host fires PreCompact mid cross-exam; flush-state.sh reads the newest session's state.json, matches phase against CROSS_EXAM_MARKERS (cross-exam, cross-examination, phase-4, champion-debate) and writes {\"decision\":\"block\",\"reason\":\"TAB session <sid> is mid-deliberation ...\"} to stdout. Compaction is vetoed; Moderator continues cross-exam uninterrupted. On a forced-compact bypass path, PostCompact emits an additionalContext digest with header 'TAB PostCompact digest — session <sid>', lines for mode / phase_completed / next_phase, cost + subagent counters, the 'session_language: <tag> (LOCKED in Phase 1 — do NOT re-detect; ...)' line, and up to 8 claims_registry entries ordered high-conf → med-conf → low-conf → unverified. InstructionsLoaded (matcher=compact) additionally re-surfaces the language lock so champions/advisors keep language invariant. Moderator resumes cross-exam consuming the digest instead of re-asking presentations.",
+      "files": [],
+      "expectations": [
+        "Session reaches Phase 4 (cross-examination) with state.json.next_phase matching a cross-exam marker before the host fires PreCompact",
+        "scripts/flush-state.sh stdout is a single JSON object with decision == 'block' and a reason that names the session id and references 'mid-deliberation' / 'cross' / 'auditor' context",
+        "The block-reason explicitly advises resuming compaction AFTER the phase closes (state-full.json re-written then)",
+        "CROSS_EXAM_MARKERS matching is case-insensitive and covers cross-exam, cross-examination, phase-4, and champion-debate substrings in either phase_completed or next_phase",
+        "flush-state.sh does NOT emit the non-blocking {additionalContext: ...} checkpoint hint when the veto fires (block path is exclusive)",
+        "flush-state.sh respects its 2s self-watchdog and exits 0 (allow compaction) on any filesystem/python failure — never crashes the host",
+        "On the forced-compact bypass path, scripts/rehydrate-state.sh emits {additionalContext: <digest>} containing the session id, mode, phase_completed, next_phase, cost_usd, and active/total subagent counters",
+        "rehydrate-state.sh digest includes session_language line with the locked IETF BCP 47 tag and the 'LOCKED in Phase 1 — do NOT re-detect' directive when state-full.session_language is set",
+        "rehydrate-state.sh digest lists up to 8 claims from claims_registry sorted high-conf > med-conf > low-conf > unverified, with long claims truncated to ~140 chars",
+        "scripts/on-instructions-loaded.sh fires for matcher=compact and re-injects the locked session_language with the 'do NOT re-detect' + AskUserQuestion-on-switch directive, independent of the PostCompact digest",
+        "After rehydration the Moderator resumes Phase 4 without re-running champion presentations — it consumes the digest + state-full.json claims_registry as the source of truth",
+        "Auditor phase (Phase 6.5) would also trigger the PreCompact veto via AUDITOR_MARKERS (phase-6.5, auditor, audit) — the same block mechanism generalizes",
+        "If no .tab/sessions directory exists, both PreCompact and PostCompact exit 0 silently (degrade gracefully, veto is opt-in)"
+      ],
+      "assertions": [
+        "PreCompact emits {\"decision\":\"block\",\"reason\":...} when state.json phase matches cross-exam markers",
+        "Block reason names the session id and warns that compaction would truncate champion/auditor context",
+        "Cross-exam detection is case-insensitive and covers cross-exam / cross-examination / phase-4 / champion-debate",
+        "Auditor-phase detection covers phase-6.5 / auditor / audit via AUDITOR_MARKERS",
+        "Non-blocking additionalContext checkpoint hint is suppressed when the veto fires",
+        "PreCompact degrades to exit 0 (allow compaction) on missing .tab dir, missing python3, or watchdog timeout",
+        "PostCompact digest contains session id, mode, phase_completed, next_phase, cost_usd, and subagent active/total counters",
+        "PostCompact digest re-injects session_language with the LOCKED directive when state-full.session_language is present",
+        "PostCompact digest lists up to 8 claims ordered high-conf > med-conf > low-conf > unverified with 140-char truncation",
+        "InstructionsLoaded (matcher=compact) independently re-injects the locked session_language with the do-NOT-re-detect + AskUserQuestion-on-switch directive",
+        "Moderator resumes Phase 4 cross-exam from the digest and claims_registry without re-asking questions already answered",
+        "Both hooks exit 0 silently when .tab/sessions is absent (opt-in veto, no host disruption)"
+      ]
+    },
+    {
+      "id": 54,
+      "should_trigger": true,
+      "prompt": "/tech-advisory-board:rechallenge .tab/decisions/0007-queue-broker.md",
+      "note": "Concurrent ADR write collision — two TAB sessions touch .tab/decisions/ in parallel. Session A is an interactive /tech-advisory-board:tab that is about to finalize ADR 0008; Session B is a /tech-advisory-board:rechallenge on 0007-queue-broker.md that (after verdict=supersede in an EnterWorktree isolation branch) merges back and also wants to allocate the next NNNN. Both compute max(existing)+1 = 8 at ≈the same instant. Between the two bin/new-adr invocations, the FileChanged hook (matcher .tab/**) fires for the first write and dispatches scripts/on-reactive-change.sh, which injects an additionalContext hint telling the Moderator the decisions/ tree was mutated externally. The second invocation MUST re-read decisions/, recompute NNNN, and land on 0009-*.md rather than clobbering 0008-*.md. .tab/index.md must be regenerated deterministically by scanning decisions/ (the supersede path in bin/supersede-adr does this) rather than blindly appending a duplicate row.",
+      "expected_output": "Session A's new-adr writes .tab/decisions/0008-<slugA>.md first. The FileChanged hook fires on that write, dispatches scripts/on-reactive-change.sh with CLAUDE_HOOK_EVENT=FileChanged, and emits an additionalContext payload identifying the ADR path as mutated by an external origin. Session B's Moderator (merging back from its rechallenge worktree via ExitWorktree mode=merge, which also triggers CwdChanged → on-reactive-change.sh) re-reads .tab/decisions/ before invoking new-adr. bin/new-adr's Python block re-scans decisions/ with the regex ^(\\d{4})- and recomputes next_num = max(existing_nums)+1 = 9, writing 0009-<slugB>.md with zero-padded NNNN. bin/supersede-adr then rewrites 0007-queue-broker.md's status line to 'superseded-by: 0009 (YYYY-MM-DD)' and regenerates .tab/index.md by os.listdir(decisions_dir) sorted, producing rows for 0007 (superseded-by: 0009), 0008, and 0009 in that order. No ADR file is overwritten, no duplicate NNNN exists on disk, and .tab/index.md contains exactly one row per NNNN in ascending order.",
+      "files": [],
+      "expectations": [
+        "Both concurrent new-adr invocations complete without overwriting a shared 0008-*.md",
+        "FileChanged hook (matcher .tab/**) dispatches scripts/on-reactive-change.sh with CLAUDE_HOOK_EVENT=FileChanged after the first ADR write",
+        "on-reactive-change.sh emits an additionalContext JSON payload naming the ADR path and tagging origin as external",
+        "The second Moderator re-reads .tab/decisions/ before its new-adr call (no stale NNNN reuse)",
+        "Second new-adr invocation's Python block recomputes next_num by rescanning decisions/ and produces 0009-*.md (not 0008-*.md)",
+        "NNNN is zero-padded to 4 digits in both filenames (0008, 0009) per bin/new-adr's f-string format",
+        "supersede-adr regenerates .tab/index.md by scanning decisions_dir and sorting filenames, not by appending to the prior index contents",
+        ".tab/index.md contains exactly one row per distinct NNNN (0007, 0008, 0009) in ascending order",
+        "The rechallenge rewrites 0007's status line to 'superseded-by: 0009 (YYYY-MM-DD)' via bin/supersede-adr's regex on '^- \\*\\*Status:\\*\\* (proposed|accepted)'",
+        "0007's new text contains a '## Superseded By — YYYY-MM-DD' section linking to decisions/0009-*.md",
+        "Rechallenge runs inside EnterWorktree isolation; ExitWorktree mode=merge triggers CwdChanged which in turn dispatches scripts/on-reactive-change.sh and re-roots the .tab/ digest",
+        "No ADR file in .tab/decisions/ is silently clobbered (pre/post filesystem diff shows net +2 new files, 0 overwritten)",
+        "Session A's .tab/sessions/<sid>/ directory is never mutated by Session B's worktree (gotcha of rechallenge SKILL.md honored)"
+      ],
+      "assertions": [
+        "FileChanged hook dispatches on-reactive-change.sh when .tab/decisions/*.md is written externally",
+        "on-reactive-change.sh payload for a .tab/decisions/* write tags 'what' as 'ADR' and instructs the Moderator to re-read before the next dependent tool call",
+        "Second new-adr invocation writes 0009-*.md not 0008-*.md after recomputing max(existing_nums)+1",
+        "Both 0008 and 0009 ADR files coexist on disk with zero-padded NNNN and distinct slugs",
+        "supersede-adr rewrites 0007 status line to 'superseded-by: 0009 (YYYY-MM-DD)' exactly once",
+        ".tab/index.md lists 0007, 0008, and 0009 in sorted NNNN order with one row each",
+        ".tab/index.md is regenerated from os.listdir(decisions_dir) scan, not blindly appended",
+        "0007 ADR body gains a '## Superseded By — YYYY-MM-DD' section linking relatively to 0009-*.md",
+        "CwdChanged on ExitWorktree mode=merge dispatches on-reactive-change.sh and re-roots the session digest",
+        "Rechallenge runs under EnterWorktree; Session A's .tab/sessions/<original>/ is never written to by Session B",
+        "No ADR file is clobbered — post-run inode/content of 0008 matches Session A's original write"
+      ]
+    },
+    {
+      "id": 56,
+      "should_trigger": true,
+      "prompt": "/tech-advisory-board:tab \"compare PostgreSQL vs MySQL for a multi-tenant SaaS\" --mode Complete",
+      "note": "agent_team_mode resolver — exercises the three-gate logic in SKILL.md Phase 5 with two mocked host configurations: (a) Agent Teams available (CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1, knob=auto) and (b) Agent Teams unavailable (env unset, knob=auto). The resolver must take agent_teams in case (a) and degrade silently to subagents in case (b), writing telemetry.json.execution_path = 'agent_teams' and 'subagents_fallback' respectively. A third pass with knob=agent_teams and env unset must hard-fail with the canonical error message. Only the cross-exam path differs across cases — the rest of the deliberation runs unchanged. The cost warning is emitted exactly once per session when execution_path resolves to 'agent_teams'.",
+      "expected_output": "Pass 1 (env=1, knob=auto): SKILL.md Phase 5 evaluates G1 (mode=Complete ✓), G2 (env=1 ✓), G3 (knob=auto ✓) and resolves to agent_teams. telemetry.json.execution_path='agent_teams'. The Phase 1 summary contains exactly one cost-warning line ('⚠ Running with Agent Teams — estimated $X (2–3× base cost). ...'). The cross-exam runs as a real Agent Team and any teammate stalls populate telemetry.json.teammate_idles[]. Pass 2 (env unset, knob=auto): G2 fails; the resolver degrades silently to subagents. telemetry.json.execution_path='subagents_fallback'. No cost warning is emitted. The fan-out shape is identical to the historical default. Pass 3 (env unset, knob=agent_teams): the resolver hard-fails with the message 'CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS not set — set the env var or switch agent_team_mode to \\'auto\\'/\\'subagents\\'.' The session does not proceed past Phase 5.",
+      "files": [],
+      "expectations": [
+        "Pass 1: telemetry.json.execution_path == 'agent_teams' when env=1 and knob=auto in Complete mode",
+        "Pass 1: a single cost-warning line is emitted in the Phase 1 summary; second invocations within the same session do NOT re-emit it",
+        "Pass 1: teammate stalls (if any) are appended to telemetry.json.teammate_idles[] by the TeammateIdle hook",
+        "Pass 2: telemetry.json.execution_path == 'subagents_fallback' when knob=auto and env is unset",
+        "Pass 2: NO cost warning is emitted in the Phase 1 summary",
+        "Pass 3: the session aborts at Phase 5 with the canonical error 'CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS not set' when knob=agent_teams and env is unset",
+        "Cheaper modes (Instant, Fast, Standard) ignore the knob and always resolve execution_path to 'subagents' (G1 fails)",
+        "schemas/telemetry.schema.json validates execution_path against the enum [agent_teams, subagents_fallback, subagents]"
+      ],
+      "assertions": [
+        "skills/tab/SKILL.md Phase 5 implements the three-gate resolver with the precedence documented in agent-teams-mode.md §1",
+        ".claude-plugin/plugin.json.userConfig.agent_team_mode is declared with enum ['subagents','agent_teams','auto'] and default 'subagents'",
+        "telemetry.json.execution_path enum matches the documented values exactly (no aliases)",
+        "The cost warning fires once per session and only when the resolved path is 'agent_teams'",
+        "The hard-fail message in Pass 3 names the env var literally so users can grep for it",
+        "auto + env-off path leaves NO trace in stderr beyond the existing telemetry write (silent degradation contract)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,245 @@
+#!/usr/bin/env bash
+# schedule-rechallenge — prepare a scheduled rechallenge for a given ADR.
+# This script cannot call the Claude Code CronCreate tool directly from
+# bash. Instead it validates the request, writes the schedule metadata
+# alongside the ADR, and emits an activation prompt that the user (or
+# the tab skill itself) can paste into an active Claude session to
+# register the cron task via the /loop skill.
+# Usage:
+#   schedule-rechallenge <adr-path> --every "<cron>" [--mode MODE]
+#                                       [--tab-dir DIR] [--record-task TASK_ID]
+#                                       [--activation routines|native|loop-fallback]
+#                                       [--dry-run]
+# Activation:
+#   Schedule version 3 emits THREE activation paths side-by-side:
+#     - `routines_spec`       — preferred for schedules > 7 days (cloud
+#                               persistence via Claude Code Routines).
+#     - `native_cron_spec`    — CronCreate envelope (Claude Code ≥ v2.1.72);
+#                               auto-expires after 7 days per host policy.
+#     - `loop_fallback_prompt` — /loop string for hosts without Cron/Routines.
+#   After activation, call `--record-task <id> --activation routines|native|loop-fallback`
+#   to freeze the path chosen.
+# Cron format (5 fields): minute hour day month day-of-week
+#   Wildcards (*), single values, steps (*/15), ranges (1-5), lists (1,15,30).
+#   Extended forms (L, W, ?, MON/JAN aliases) are NOT supported.
+# Canonical examples:
+#   "0 9 * * 1"      — every Monday at 09:00 (weekly review)
+#   "0 0 1 * *"      — first day of every month at midnight (monthly)
+#   "0 0 1 */3 *"    — first day of every 3rd month (quarterly)
+#   "0 0 1 1,7 *"    — January 1st and July 1st (semi-annual)
+#   "0 0 1 1 *"      — January 1st at midnight (annual)
+# Modes:
+#   quick (default) — compressed rechallenge flow
+#   full            — request a full /tech-advisory-board:tab session instead
+# Environment:
+#   CLAUDE_CODE_DISABLE_CRON=1 — script exits with a clear message and does
+#       NOT write schedule metadata.
+# Exit codes:
+#   0   schedule metadata written (or dry-run completed)
+#   1   invalid input (missing ADR, bad cron, already superseded, cron disabled)
+#   2   bad invocation
+set -uo pipefail
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    sed -n '2,32p' "$0" | sed 's/^# \?//'
+    exit 0
+fi
+
+if [[ "${CLAUDE_CODE_DISABLE_CRON:-0}" == "1" ]]; then
+    echo "CronCreate is disabled via CLAUDE_CODE_DISABLE_CRON=1." >&2
+    echo "Scheduled rechallenge cannot be activated in this host." >&2
+    exit 1
+fi
+
+ADR_PATH="${1:-}"
+[[ -n "$ADR_PATH" ]] || { echo "Missing <adr-path>" >&2; exit 2; }
+shift 2>/dev/null || true
+
+CRON=""
+MODE="quick"
+TAB_DIR=""
+RECORD_TASK=""
+ACTIVATION=""
+DRY_RUN=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --every)       CRON="$2"; shift ;;
+        --mode)        MODE="$2"; shift ;;
+        --tab-dir)     TAB_DIR="$2"; shift ;;
+        --record-task) RECORD_TASK="$2"; shift ;;
+        --activation)  ACTIVATION="$2"; shift ;;
+        --dry-run)     DRY_RUN=true ;;
+        *) echo "Unknown flag: $1" >&2; exit 2 ;;
+    esac
+    shift
+done
+
+[[ -f "$ADR_PATH" ]] || { echo "ADR not found: $ADR_PATH" >&2; exit 1; }
+
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "python3 required" >&2; exit 1
+fi
+
+# Pre-flight: not already superseded
+if grep -qE '^-\s*\*\*Status:\*\*\s*superseded-by:' "$ADR_PATH"; then
+    echo "Refusing to schedule: ADR is already superseded." >&2
+    exit 1
+fi
+
+python3 - "$ADR_PATH" "$CRON" "$MODE" "${TAB_DIR:-}" "$RECORD_TASK" "${ACTIVATION:-}" "$DRY_RUN" <<'PYEOF'
+import json, os, re, sys
+from datetime import datetime, timezone
+
+(adr_path, cron, mode, tab_dir, record_task, activation, dry_run) = sys.argv[1:8]
+dry_run = dry_run == "true"
+
+schedule_path = adr_path.replace(".md", ".schedule.json")
+
+# ---- Record-task mode: update existing schedule with a CronCreate task id ----
+if record_task:
+    if not os.path.isfile(schedule_path):
+        print(json.dumps({"error": f"no schedule file at {schedule_path}"}))
+        sys.exit(1)
+    with open(schedule_path) as f:
+        meta = json.load(f)
+    meta["task_id"] = record_task
+    meta["activated_at"] = datetime.now(timezone.utc).isoformat()
+    meta["active"] = True
+    if activation in ("routines", "native", "loop-fallback"):
+        meta["activation_path"] = activation
+    elif activation:
+        print(json.dumps({"error": f"--activation must be routines|native|loop-fallback, got '{activation}'"}))
+        sys.exit(2)
+    if not dry_run:
+        with open(schedule_path, "w") as f:
+            json.dump(meta, f, indent=2, ensure_ascii=False)
+    print(json.dumps({
+        "recorded": True,
+        "task_id": record_task,
+        "activation_path": meta.get("activation_path", "pending"),
+        "path": schedule_path,
+    }, indent=2))
+    sys.exit(0)
+
+# ---- Fresh schedule creation ----
+if not cron:
+    print(json.dumps({"error": "--every <cron-expression> required"}))
+    sys.exit(2)
+
+# Validate cron: exactly 5 whitespace-separated fields, simple atoms only
+if not re.match(
+    r"^\s*(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s*$",
+    cron
+):
+    print(json.dumps({"error": f"cron must have exactly 5 fields: '{cron}'"}))
+    sys.exit(1)
+
+# Reject extended forms
+if re.search(r"\b(L|W|\?)\b", cron) or re.search(
+    r"\b(MON|TUE|WED|THU|FRI|SAT|SUN|JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)\b",
+    cron
+):
+    print(json.dumps({"error": f"extended cron syntax (L/W/?/aliases) not supported: '{cron}'"}))
+    sys.exit(1)
+
+if mode not in ("quick", "full"):
+    print(json.dumps({"error": f"--mode must be quick|full, got '{mode}'"}))
+    sys.exit(2)
+
+# Resolve TAB_DIR if not given (walk up from adr_path)
+if not tab_dir:
+    p = os.path.abspath(adr_path)
+    while p and p != "/":
+        parent = os.path.dirname(p)
+        if os.path.basename(parent) == ".tab":
+            tab_dir = parent
+            break
+        p = parent
+
+# Compose both activation paths:
+#  - native_cron_spec: envelope to pass to the CronCreate tool (CC ≥ v2.1.72).
+#    Preferred when the host supports native scheduling.
+#  - loop_fallback_prompt: /loop-skill string to paste when CronCreate is
+#    unavailable (Bedrock/Vertex without dynamic /loop still falls through
+#    to a manual reminder).
+skill = ("tech-advisory-board:rechallenge"
+         if mode == "quick" else "tech-advisory-board:tab")
+rel_adr = os.path.relpath(adr_path, start=tab_dir or ".")
+task_prompt = (f'/{skill} {adr_path}' if mode == "quick"
+               else f'/{skill} Re-evaluate decision in {adr_path}')
+
+native_cron_spec = {
+    "tool": "CronCreate",
+    "input": {
+        "schedule": cron,
+        "prompt": task_prompt,
+        "label": f"tab-rechallenge:{os.path.basename(adr_path)}",
+        "max_runs": None,              # recurring; host auto-expires after 7 days
+        "tags": ["tab", "rechallenge", mode],
+    },
+    "notes": "Recurring CronCreate tasks auto-expire after 7 days per host policy. "
+             "Session-level limit: 50 tasks. On expiry, SessionStart re-crons "
+             "schedules whose .schedule.json has active=true."
+}
+
+# Routines: cloud-persistent scheduling (https://code.claude.com/docs/en/routines).
+# Preferred for long-lived ADR rechallenges (monthly, quarterly, annual) because
+# the schedule survives host reboots and session expiry. The consumer
+# (Moderator or a /schedule skill) reads this block and creates a Routine
+# via the appropriate UI / API.
+routines_spec = {
+    "cron": cron,
+    "prompt": task_prompt,
+    "timezone": os.environ.get("TZ") or "UTC",
+    "label": f"tab-rechallenge:{os.path.basename(adr_path)}",
+    "notes": "Cloud-persistent. Prefer this for schedules > 7 days. "
+             "Requires Claude Code Routines (cloud). See docs/routines."
+}
+
+loop_fallback_prompt = f'/loop {cron} "{task_prompt}"'
+
+meta = {
+    "schedule_version": 3,
+    "adr_path": os.path.abspath(adr_path),
+    "cron": cron,
+    "mode": mode,
+    "task_prompt": task_prompt,
+    "routines_spec": routines_spec,
+    "native_cron_spec": native_cron_spec,
+    "loop_fallback_prompt": loop_fallback_prompt,
+    "created_at": datetime.now(timezone.utc).isoformat(),
+    "task_id": None,
+    "active": False,
+    "last_run": None,
+    "failure_count": 0,
+    "activation_path": "pending",       # set to "routines" | "native" | "loop-fallback" when --record-task fires
+}
+
+if not dry_run:
+    with open(schedule_path, "w") as f:
+        json.dump(meta, f, indent=2, ensure_ascii=False)
+
+print(json.dumps({
+    "metadata_written": not dry_run,
+    "schedule_path": schedule_path,
+    "metadata": meta,
+    "activation_guidance": {
+        "preferred_long_lived": "For schedules > 7 days (weekly, monthly, quarterly, annual) "
+                                "register a Routine using routines_spec. Then call "
+                                "`schedule-rechallenge <adr> --record-task <routine-id> --activation routines`.",
+        "native_short_lived":   "For schedules bounded to the current session / next 7 days, invoke "
+                                "CronCreate with native_cron_spec.input. Then call "
+                                "`schedule-rechallenge <adr> --record-task <task-id> --activation native`.",
+        "fallback":             "If neither Routines nor CronCreate is available, paste the "
+                                "loop_fallback_prompt into an active session, capture the /loop task id, "
+                                "and call `--record-task <id> --activation loop-fallback`.",
+    },
+    "notes": [
+        "Recurring CronCreate tasks auto-expire after 7 days in the host.",
+        "Routines persist cloud-side and survive host restarts — use them for ADR review cycles.",
+        "SessionStart hook may be configured to re-cron expired CronCreate schedules "
+        "whose .schedule.json has active=true — see hooks-catalog.md."
+    ]
+}, indent=2))
+PYEOF

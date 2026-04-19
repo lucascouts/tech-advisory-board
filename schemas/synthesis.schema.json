@@ -1,0 +1,374 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tech-advisory-board/synthesis.schema.json",
+  "title": "TAB Synthesis",
+  "description": "Canonical structured output of a TAB session. Consumer contract documented in  and skills/tab/references/synthesis-schema.md.",
+  "type": "object",
+  "required": [
+    "tab_version",
+    "schema_version",
+    "session",
+    "context",
+    "landscape",
+    "recommendation",
+    "risks"
+  ],
+  "properties": {
+    "tab_version": {
+      "type": "string",
+      "description": "Plugin version that produced this file (informational)."
+    },
+    "schema_version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Contract version. Consumers should fail-soft on mismatch."
+    },
+    "session": {
+      "type": "object",
+      "required": ["id", "question", "language", "started_at", "mode", "complexity"],
+      "properties": {
+        "id": {"type": "string"},
+        "question": {"type": "string"},
+        "language": {"type": "string", "description": "IETF BCP 47 tag (e.g. pt-BR, en)."},
+        "started_at": {"type": "string", "format": "date-time"},
+        "completed_at": {"type": ["string", "null"], "format": "date-time"},
+        "mode": {"enum": ["Instant", "Fast", "Standard", "Complete", "Complete+", "Rechallenge"]},
+        "complexity": {"enum": ["Trivial", "Simple", "Moderate", "High", "Very High"]}
+      }
+    },
+    "context": {
+      "type": "object",
+      "required": ["stage"],
+      "properties": {
+        "stage": {"enum": ["POC", "MVP", "Full"]},
+        "team_size": {"type": ["integer", "null"]},
+        "team_expertise": {"type": "array", "items": {"type": "string"}},
+        "constraints": {"type": "array", "items": {"type": "string"}},
+        "detected_stack": {"type": "array", "items": {"type": "string"}},
+        "assumptions_recorded": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["text", "confirmed"],
+            "properties": {
+              "text": {"type": "string"},
+              "confirmed": {"type": "boolean"}
+            }
+          }
+        }
+      }
+    },
+    "landscape": {
+      "type": "object",
+      "required": ["shortlist"],
+      "properties": {
+        "shortlist": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": {"type": "string"},
+              "version": {"type": "string"},
+              "confidence": {"$ref": "#/$defs/confidence"},
+              "stage_fit": {"type": "string"}
+            }
+          }
+        },
+        "discarded": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "reason"],
+            "properties": {
+              "name": {"type": "string"},
+              "reason": {"type": "string"},
+              "criterion": {"type": "string"},
+              "confidence": {"$ref": "#/$defs/confidence"}
+            }
+          }
+        }
+      }
+    },
+    "champions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "archetype", "stack", "strengths", "weaknesses"],
+        "properties": {
+          "name": {"type": "string"},
+          "archetype": {"type": "string"},
+          "stack": {"type": "string"},
+          "strengths": {"type": "array", "items": {"type": "string"}},
+          "weaknesses": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": ["weakness", "mitigation"],
+              "properties": {
+                "weakness": {"type": "string"},
+                "mitigation": {"type": "string"}
+              }
+            }
+          },
+          "stage_vision": {
+            "type": "object",
+            "properties": {
+              "POC": {"type": "object"},
+              "MVP": {"type": "object"},
+              "Full": {"type": "object"}
+            }
+          },
+          "readiness_assessment": {
+            "description": "Present only when this champion is the Vanguard.",
+            "type": "object",
+            "properties": {
+              "verdict": {"enum": ["production-ready", "near-ready", "experimental"]},
+              "maturity_estimate_months": {"type": "integer"},
+              "blockers": {"type": "array", "items": {"type": "string"}}
+            }
+          }
+        }
+      }
+    },
+    "cross_examination": {
+      "type": "object",
+      "properties": {
+        "rounds": {"type": "integer", "minimum": 0},
+        "concessions": {"type": "array"},
+        "unresolved_points": {"type": "array"}
+      }
+    },
+    "scores": {
+      "type": "object",
+      "properties": {
+        "matrix": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["advisor", "champion", "score"],
+            "properties": {
+              "advisor": {"type": "string"},
+              "champion": {"type": "string"},
+              "score": {"type": "integer", "minimum": 1, "maximum": 10},
+              "score_z": {
+                "type": "number",
+                "description": "Per-advisor z-score (computed by bin/score-zscore). Optional — present only when normalization ran. See debate-protocol.md §Score Consolidation."
+              },
+              "rationale_ref": {"type": "string"}
+            }
+          }
+        },
+        "ranking_z": {
+          "type": "array",
+          "description": "Champion ranking by mean z-score (advisor drift removed). Populated alongside matrix when z-score normalization ran.",
+          "items": {
+            "type": "object",
+            "required": ["champion", "mean_z"],
+            "properties": {
+              "champion": {"type": "string"},
+              "mean_z": {"type": "number"},
+              "samples": {"type": "integer", "minimum": 1}
+            }
+          }
+        },
+        "divergences": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "champion": {"type": "string"},
+              "advisor_a": {"type": "object"},
+              "advisor_b": {"type": "object"},
+              "delta": {"type": "integer", "minimum": 0},
+              "resolved": {"type": "boolean"}
+            }
+          }
+        }
+      }
+    },
+    "recommendation": {
+      "type": "object",
+      "required": ["primary", "reversibility"],
+      "properties": {
+        "primary": {
+          "type": "object",
+          "required": ["stack", "confidence", "rationale"],
+          "properties": {
+            "stack": {"type": "string"},
+            "total_score": {"type": "number"},
+            "confidence": {"$ref": "#/$defs/confidence"},
+            "rationale": {"type": "string"}
+          }
+        },
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["stack", "when_to_prefer"],
+            "properties": {
+              "stack": {"type": "string"},
+              "total_score": {"type": "number"},
+              "when_to_prefer": {"type": "string"}
+            }
+          }
+        },
+        "reversibility": {"enum": ["low", "medium", "high"]},
+        "pivot_triggers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["condition", "action"],
+            "properties": {
+              "condition": {"type": "string"},
+              "action": {"type": "string"}
+            }
+          }
+        }
+      }
+    },
+    "migration_path": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["from_stage", "to_stage"],
+        "properties": {
+          "from_stage": {"enum": ["POC", "MVP", "Full"]},
+          "to_stage": {"enum": ["POC", "MVP", "Full"]},
+          "effort_days": {"type": "number"},
+          "changes": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "risks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["description", "probability", "impact"],
+        "properties": {
+          "description": {"type": "string"},
+          "probability": {"enum": ["low", "medium", "high"]},
+          "impact": {"enum": ["low", "medium", "high"]},
+          "mitigation": {"type": "string"},
+          "stage": {"enum": ["POC", "MVP", "Full"]},
+          "affected_options": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "unverified_claims": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["claim"],
+        "properties": {
+          "claim": {"type": "string"},
+          "expected_source": {"type": "string"},
+          "impact": {"enum": ["low", "medium", "high"]}
+        }
+      }
+    },
+    "auditor_findings": {
+      "type": "array",
+      "description": "Required and non-empty in Complete/Complete+/Rechallenge modes.",
+      "items": {
+        "type": "object",
+        "required": ["severity", "finding"],
+        "properties": {
+          "severity": {"enum": ["critical", "moderate", "informational"]},
+          "finding": {"type": "string"},
+          "addressed_in_section": {"type": ["string", "null"]},
+          "dismissed_reason": {"type": ["string", "null"]}
+        }
+      }
+    },
+    "supervisor_dissent": {
+      "type": ["object", "null"],
+      "properties": {
+        "identified_bias": {"type": "string"},
+        "overlooked_angle": {"type": "string"},
+        "proposed_reranking": {"type": "array"},
+        "evidence": {"type": "array"},
+        "severity": {"enum": ["critical", "moderate", "informational"]}
+      }
+    },
+    "conflicts_of_interest": {
+      "type": "array",
+      "description": "COI cards emitted by subagents with memory: project. Hard-required and non-empty in Complete / Complete+ / Rechallenge; optional otherwise. See skills/tab/references/coi-disclosure.md.",
+      "items": {
+        "type": "object",
+        "required": ["agent", "agent_type", "memory_loaded", "bias_signal", "mitigations"],
+        "properties": {
+          "agent": {"type": "string"},
+          "agent_type": {"enum": ["researcher", "auditor"]},
+          "memory_loaded": {"type": "integer", "minimum": 0},
+          "bias_signal": {"enum": ["none", "low", "medium", "high"]},
+          "mitigations": {
+            "type": "array",
+            "items": {"type": "string"}
+          }
+        }
+      }
+    },
+    "adr_path": {
+      "type": ["string", "null"],
+      "description": "Relative path to the MADR ADR for this decision. Null for Instant/Fast modes where ADR generation is optional."
+    },
+    "consumable_hints": {
+      "type": "object",
+      "description": "Optional hints for external tools (task generators, dashboards).",
+      "properties": {
+        "task_generators": {"type": "object"}
+      }
+    },
+    "adoption_scaffold": {
+      "type": "object",
+      "description": "Operational contract around the chosen recommendation (§3.4.1 / synthesis-template §7). Required in Complete / Complete+.",
+      "properties": {
+        "migration_steps": {"type": "array", "items": {"type": "string"}},
+        "lock_in_risks": {"type": "array", "items": {"type": "string"}},
+        "operational_checklist": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["at", "metric"],
+            "properties": {
+              "at": {"type": "string", "description": "Relative timestamp, e.g. 'D+30', 'D+90'."},
+              "metric": {"type": "string"},
+              "action": {"type": "string"}
+            }
+          }
+        },
+        "integration_debt": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "sensitivity": {
+      "type": "object",
+      "description": "Decision sensitivity (§3.4.2 / synthesis-template §8). Required in Standard+.",
+      "properties": {
+        "thresholds": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["dimension", "threshold", "effect"],
+            "properties": {
+              "dimension": {"type": "string"},
+              "threshold": {"type": "string"},
+              "effect": {"type": "string"}
+            }
+          }
+        },
+        "stable_dimensions": {"type": "array", "items": {"type": "string"}},
+        "fragile_dimensions": {"type": "array", "items": {"type": "string"}},
+        "fragile": {"type": "boolean", "description": "True when the primary recommendation sits near a fragile threshold."}
+      }
+    }
+  },
+  "$defs": {
+    "confidence": {
+      "enum": ["high-conf", "med-conf", "low-conf", "unverified"]
+    }
+  }
+}

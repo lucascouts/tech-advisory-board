@@ -1,0 +1,375 @@
+#!/usr/bin/env bash
+# new-adr — generate a MADR-formatted ADR from a TAB synthesis.json.
+# Usage:
+#   new-adr <path-to-synthesis.json> [--tab-dir DIR] [--slug SLUG] [--dry-run]
+# Behavior:
+#   1. Reads synthesis.json
+#   2. Scans <.tab>/decisions/ for the next zero-padded NNNN
+#   3. Derives a slug from the decision (--slug overrides; else from session.question)
+#   4. Writes <.tab>/decisions/<NNNN>-<slug>.md in MADR format
+#   5. Appends a row to <.tab>/index.md and rewrites the table
+#   6. Prints the ADR path (absolute)
+# If --dry-run is set, no files are written; the ADR markdown is emitted to stdout.
+# See  for MADR field list.
+set -euo pipefail
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+    sed -n '2,19p' "$0" | sed 's/^# \?//'
+    exit 0
+fi
+
+SYNTH_PATH="${1:-}"
+shift 2>/dev/null || true
+
+TAB_DIR=""
+SLUG_OVERRIDE=""
+DRY_RUN=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --tab-dir)  TAB_DIR="$2"; shift ;;
+        --slug)     SLUG_OVERRIDE="$2"; shift ;;
+        --dry-run)  DRY_RUN=true ;;
+        *) echo "Unknown flag: $1" >&2; exit 2 ;;
+    esac
+    shift
+done
+
+if [[ -z "$SYNTH_PATH" ]]; then
+    echo "Usage: new-adr <synthesis.json> [--tab-dir DIR] [--slug SLUG] [--dry-run]" >&2
+    exit 2
+fi
+
+if [[ ! -f "$SYNTH_PATH" ]]; then
+    echo "File not found: $SYNTH_PATH" >&2
+    exit 1
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+    echo "python3 required" >&2
+    exit 1
+fi
+
+# Default TAB_DIR: walk up from synthesis.json path to find .tab/
+if [[ -z "$TAB_DIR" ]]; then
+    TAB_DIR=$(python3 - "$SYNTH_PATH" <<'PYEOF'
+import os, sys
+p = os.path.abspath(sys.argv[1])
+# Expected layout: <project>/.tab/sessions/<session>/synthesis.json
+#                                ^— we want this
+while p and p != "/":
+    parent = os.path.dirname(p)
+    if os.path.basename(parent) == ".tab":
+        print(parent)
+        break
+    p = parent
+else:
+    # Fallback: $PWD/.tab
+    print(os.path.join(os.getcwd(), ".tab"))
+PYEOF
+)
+fi
+
+DECISIONS_DIR="$TAB_DIR/decisions"
+INDEX_PATH="$TAB_DIR/index.md"
+
+mkdir -p "$DECISIONS_DIR"
+
+python3 - "$SYNTH_PATH" "$TAB_DIR" "$SLUG_OVERRIDE" "$DRY_RUN" <<'PYEOF'
+# Concurrency: the "reserve next NNNN → write ADR file → update
+# index.md" cycle is guarded by an flock on .tab/decisions/.lock. Two
+# parallel new-adr invocations (e.g. a merge gate + a scheduled
+# rechallenge firing in the same minute) would otherwise both compute
+# the same next NNNN and one would clobber the other. The O_EXCL
+# create below is a secondary belt in case the lock is skipped.
+import json, os, re, sys
+from datetime import datetime, timezone
+
+sys.path.insert(0, os.path.join(
+    os.environ.get("CLAUDE_PLUGIN_ROOT", ""), "scripts", "lib"))
+from json_atomic import acquire_flock
+
+synth_path, tab_dir, slug_override, dry_run = sys.argv[1:5]
+dry_run = dry_run == "true"
+
+with open(synth_path) as f:
+    s = json.load(f)
+
+# ---- Slug ----
+def slugify(text, max_len=50):
+    text = (text or "").lower()
+    text = re.sub(r"[^\w\s-]", "", text, flags=re.UNICODE)
+    text = re.sub(r"[\s_-]+", "-", text).strip("-")
+    return text[:max_len].rstrip("-") or "decision"
+
+session = s.get("session") or {}
+slug = slug_override.strip() if slug_override else slugify(session.get("question", ""))
+
+decisions_dir = os.path.join(tab_dir, "decisions")
+
+# ---- Acquire the decisions flock for the rest of the process lifetime ----
+# We keep the lock fd open as a module-level reference so the flock is held
+# from here through the ADR+index.md write. POSIX releases the flock when
+# the fd closes (process exit), so no explicit unlock is needed.
+# Skipped in dry-run since no filesystem state is touched.
+_lock_fd = None
+if not dry_run:
+    os.makedirs(decisions_dir, exist_ok=True)
+    _lock_fd = open(os.path.join(decisions_dir, ".lock"), "w")
+    acquire_flock(_lock_fd, timeout_seconds=5.0)
+
+# ---- Next sequential number (inside the lock) ----
+existing_nums = []
+if os.path.isdir(decisions_dir):
+    for name in os.listdir(decisions_dir):
+        m = re.match(r"^(\d{4})-", name)
+        if m:
+            existing_nums.append(int(m.group(1)))
+next_num = (max(existing_nums) + 1) if existing_nums else 1
+nnnn = f"{next_num:04d}"
+adr_filename = f"{nnnn}-{slug}.md"
+adr_path = os.path.join(decisions_dir, adr_filename)
+
+# ---- Pull fields from synthesis ----
+rec = s.get("recommendation") or {}
+primary = rec.get("primary") or {}
+alternatives = rec.get("alternatives") or []
+context = s.get("context") or {}
+landscape = s.get("landscape") or {}
+risks = s.get("risks") or []
+migration = s.get("migration_path") or []
+pivots = rec.get("pivot_triggers") or []
+auditor = s.get("auditor_findings") or []
+
+date_str = (session.get("completed_at") or session.get("started_at")
+            or datetime.now(timezone.utc).isoformat())[:10]
+
+# ---- MADR body ----
+lines = []
+
+# YAML frontmatter — MADR 3 allows optional front-matter; TAB uses it to
+# carry structured `outcome` tracking (see §3.3 of APRIMORAMENTOS.md).
+# Consumers that predate front-matter support simply skip it.
+lines.append("---")
+lines.append(f"adr_number: {nnnn}")
+lines.append(f"session_id: {session.get('id', '?')}")
+lines.append(f"mode: {session.get('mode', '?')}")
+lines.append(f"complexity: {session.get('complexity', '?')}")
+lines.append(f"date: {date_str}")
+lines.append("status: proposed")
+lines.append("outcome:")
+lines.append("  status: pending     # success | pivot | abandon | pending")
+lines.append("  measured_at: null   # ISO-8601 date populated by record-outcome")
+lines.append("  actual_vs_predicted: []")
+lines.append("  lessons: []")
+lines.append("---")
+lines.append("")
+
+lines.append(f"# {nnnn}. {session.get('question', slug)}")
+lines.append("")
+lines.append("- **Status:** proposed")
+lines.append(f"- **Date:** {date_str}")
+lines.append(f"- **Session:** `{session.get('id', '?')}`  ")
+lines.append(f"- **Mode:** {session.get('mode', '?')} ({session.get('complexity', '?')})")
+lines.append(f"- **Reversibility:** {rec.get('reversibility', 'unknown')}")
+lines.append(f"- **Session language:** {session.get('language', '?')}")
+lines.append("")
+
+lines.append("## Context and Problem Statement")
+lines.append("")
+lines.append(session.get("question", "(question not captured)"))
+lines.append("")
+if context.get("constraints"):
+    lines.append("### Constraints")
+    for c in context["constraints"]:
+        lines.append(f"- {c}")
+    lines.append("")
+if context.get("detected_stack"):
+    lines.append("### Detected stack")
+    lines.append(", ".join(context["detected_stack"]))
+    lines.append("")
+if context.get("assumptions_recorded"):
+    lines.append("### Assumptions")
+    for a in context["assumptions_recorded"]:
+        mark = "[confirmed]" if a.get("confirmed") else "[unconfirmed]"
+        lines.append(f"- {mark} {a.get('text','')}")
+    lines.append("")
+
+lines.append("## Decision Drivers")
+lines.append("")
+drivers_seen = False
+for r in risks:
+    if r.get("probability") == "high" or r.get("impact") == "high":
+        lines.append(f"- Mitigate: {r.get('description','')}")
+        drivers_seen = True
+for a in context.get("assumptions_recorded", []) or []:
+    if a.get("confirmed"):
+        lines.append(f"- Assumed: {a.get('text','')}")
+        drivers_seen = True
+if not drivers_seen:
+    lines.append("- (no explicit drivers recorded)")
+lines.append("")
+
+lines.append("## Considered Options")
+lines.append("")
+shortlist = landscape.get("shortlist") or []
+for item in shortlist:
+    lines.append(f"- **{item.get('name','?')}**"
+                 f"{' '+item.get('version','') if item.get('version') else ''}"
+                 f" — stage fit: {item.get('stage_fit','?')}"
+                 f" — confidence: {item.get('confidence','?')}")
+if not shortlist:
+    lines.append("- (shortlist unavailable)")
+lines.append("")
+
+lines.append("## Decision Outcome")
+lines.append("")
+lines.append(f"**Chosen option:** `{primary.get('stack','?')}`")
+lines.append("")
+lines.append(primary.get("rationale", "(no rationale recorded)"))
+lines.append("")
+if alternatives:
+    lines.append("### Considered alternatives (not chosen)")
+    for alt in alternatives:
+        lines.append(f"- **{alt.get('stack','?')}** — prefer when: {alt.get('when_to_prefer','—')}")
+    lines.append("")
+
+lines.append("## Consequences")
+lines.append("")
+lines.append("### Positive")
+for strength in (primary.get("strengths") or []):
+    lines.append(f"- {strength}")
+# Fallback: derive from champion of the primary stack
+if not primary.get("strengths"):
+    for ch in s.get("champions") or []:
+        if ch.get("stack") == primary.get("stack"):
+            for st in ch.get("strengths", []):
+                lines.append(f"- {st}")
+            break
+lines.append("")
+lines.append("### Negative")
+for w in (primary.get("weaknesses") or []):
+    if isinstance(w, dict):
+        lines.append(f"- {w.get('weakness','')} — mitigation: {w.get('mitigation','')}")
+    else:
+        lines.append(f"- {w}")
+if not primary.get("weaknesses"):
+    for ch in s.get("champions") or []:
+        if ch.get("stack") == primary.get("stack"):
+            for w in ch.get("weaknesses", []):
+                lines.append(f"- {w.get('weakness','')} — mitigation: {w.get('mitigation','')}")
+            break
+lines.append("")
+
+lines.append("## Pros and Cons of the Options")
+lines.append("")
+for ch in s.get("champions") or []:
+    lines.append(f"### {ch.get('stack','?')} ({ch.get('archetype','—')})")
+    lines.append("")
+    for st in ch.get("strengths", []):
+        lines.append(f"- ✔ {st}")
+    for w in ch.get("weaknesses", []):
+        if isinstance(w, dict):
+            lines.append(f"- ✘ {w.get('weakness','')}")
+        else:
+            lines.append(f"- ✘ {w}")
+    lines.append("")
+
+lines.append("## Migration Path")
+lines.append("")
+if migration:
+    for step in migration:
+        lines.append(f"- {step.get('from_stage','?')} → {step.get('to_stage','?')}"
+                     f" ({step.get('effort_days','?')} days)")
+        for ch in step.get("changes", []):
+            lines.append(f"  - {ch}")
+else:
+    lines.append("(no migration path recorded)")
+lines.append("")
+
+lines.append("## Review Triggers")
+lines.append("")
+if pivots:
+    for p in pivots:
+        lines.append(f"- When `{p.get('condition','?')}` → {p.get('action','?')}")
+else:
+    lines.append("- Re-evaluate annually")
+    lines.append("- Re-evaluate on material change to constraints or stack")
+lines.append("")
+
+if auditor:
+    lines.append("## Auditor Findings")
+    lines.append("")
+    for f_ in auditor:
+        sev = f_.get("severity", "?")
+        addr = f_.get("addressed_in_section") or f_.get("dismissed_reason") or "unresolved"
+        lines.append(f"- **[{sev}]** {f_.get('finding','')} — addressed: {addr}")
+    lines.append("")
+
+lines.append("## Links")
+lines.append("")
+# Relative path from decisions/ back to synthesis.json
+rel_synth = os.path.relpath(synth_path, os.path.join(tab_dir, "decisions"))
+lines.append(f"- Canonical synthesis: [{rel_synth}]({rel_synth})")
+lines.append(f"- Session dir: `{session.get('id','?')}`")
+lines.append("")
+
+adr_markdown = "\n".join(lines)
+
+# ---- Dry-run or write ----
+if dry_run:
+    print(adr_markdown)
+    sys.exit(0)
+
+# O_EXCL is a belt-and-suspenders over the flock: if anyone ever
+# writes to decisions/ without going through this script (skipping
+# the lock), the create fails loudly instead of silently clobbering.
+try:
+    fd = os.open(adr_path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644)
+except FileExistsError:
+    print(
+        f"ADR already exists: {adr_path}. "
+        "This indicates another writer bypassed the decisions flock. "
+        "Re-run new-adr to get a fresh NNNN.",
+        file=sys.stderr,
+    )
+    sys.exit(1)
+with os.fdopen(fd, "w") as f:
+    f.write(adr_markdown)
+
+# ---- Update index.md ----
+index_path = os.path.join(tab_dir, "index.md")
+os.makedirs(tab_dir, exist_ok=True)
+
+# Read or initialize
+rows = []
+if os.path.isfile(index_path):
+    with open(index_path) as f:
+        content = f.read()
+    # Pull existing rows from the table
+    # Table rows: lines that start with "| " and don't contain "---"
+    for line in content.splitlines():
+        if line.startswith("|") and "---" not in line and not line.startswith("| # "):
+            # Skip the empty placeholder row
+            if "_No decisions recorded yet._" in line:
+                continue
+            rows.append(line)
+
+# Add our new row
+new_row = (f"| {nnnn} | [{session.get('question','?')[:80]}]"
+           f"(decisions/{adr_filename}) | proposed | {date_str} | "
+           f"`{session.get('id','?')}` |")
+rows.append(new_row)
+
+# Rewrite index.md
+with open(index_path, "w") as f:
+    f.write("# Decisions Index\n\n")
+    f.write("Generated and maintained by the TAB plugin. Entries are appended as "
+            "each ADR is produced; statuses are updated when decisions are superseded.\n\n")
+    f.write("| # | Title | Status | Date | Session |\n")
+    f.write("|---|---|---|---|---|\n")
+    for row in rows:
+        f.write(row + "\n")
+
+print(os.path.abspath(adr_path))
+PYEOF

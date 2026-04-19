@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+# resume-session — detect interrupted TAB sessions and emit a resume payload.
+# Usage:
+#   resume-session [--tab-dir DIR] [--window-hours N] [--reconcile]
+# A session is "resumable" when:
+#   - state.json exists and parses
+#   - phase_completed is NOT in {cost-report, archival}
+#   - last_updated is within --window-hours (default 24)
+#   - session dir is NOT under sessions/archived/
+# Outputs (JSON on stdout):
+#   {
+#     "status": "ok" | "no-sessions",
+#     "window_hours": N,
+#     "candidates": [
+#       {
+#         "session_id": "...",
+#         "session_path": "...",
+#         "phase_completed": "...",
+#         "next_phase": "...",
+#         "mode": "...",
+#         "last_updated": "...",
+#         "idle_hours": 1.3,
+#         "question": "...",
+#         "full_state_path": "...|null"
+#       }
+#     ]
+#   }
+# --reconcile flag: future use — syncs state.json after a /rewind operation.
+set -euo pipefail
+
+TAB_DIR=""
+WINDOW_HOURS=24
+RECONCILE=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --tab-dir)         TAB_DIR="$2"; shift ;;
+        --window-hours)    WINDOW_HOURS="$2"; shift ;;
+        --reconcile)       RECONCILE=true ;;
+        -h|--help)
+            sed -n '2,30p' "$0" | sed 's/^# \?//'
+            exit 0 ;;
+        *) echo "Unknown flag: $1" >&2; exit 2 ;;
+    esac
+    shift
+done
+
+[[ -z "$TAB_DIR" ]] && TAB_DIR="$PWD/.tab"
+
+if [[ ! -d "$TAB_DIR/sessions" ]]; then
+    echo '{"status":"no-sessions","candidates":[]}'
+    exit 0
+fi
+
+if ! command -v python3 >/dev/null 2>&1; then
+    echo '{"status":"error","reason":"python3 required"}' >&2
+    exit 1
+fi
+
+python3 - "$TAB_DIR" "$WINDOW_HOURS" "$RECONCILE" <<'PYEOF'
+import json, os, sys
+from datetime import datetime, timezone
+
+tab_dir, window_hours, reconcile = sys.argv[1], float(sys.argv[2]), sys.argv[3] == "true"
+sessions_dir = os.path.join(tab_dir, "sessions")
+now = datetime.now(timezone.utc)
+
+candidates = []
+for entry in sorted(os.listdir(sessions_dir)):
+    if entry == "archived":
+        continue
+    session_path = os.path.join(sessions_dir, entry)
+    if not os.path.isdir(session_path):
+        continue
+    state_path = os.path.join(session_path, "state.json")
+    if not os.path.isfile(state_path):
+        continue
+    try:
+        with open(state_path) as f:
+            state = json.load(f)
+    except Exception:
+        continue
+
+    phase = state.get("phase_completed", "")
+    if phase in ("cost-report", "archival"):
+        continue
+
+    last = state.get("last_updated")
+    if not last:
+        continue
+    try:
+        last_dt = datetime.fromisoformat(last.replace("Z", "+00:00"))
+    except Exception:
+        continue
+
+    idle_h = (now - last_dt).total_seconds() / 3600
+    if idle_h > window_hours:
+        continue
+
+    full_ref = state.get("full_state_ref")
+    full_path = None
+    if full_ref:
+        # Resolve relative to session dir
+        full_path = os.path.normpath(os.path.join(session_path, full_ref))
+        if not os.path.isfile(full_path):
+            full_path = None
+
+    candidates.append({
+        "session_id": state.get("session_id", entry),
+        "session_path": session_path,
+        "phase_completed": phase,
+        "next_phase": state.get("next_phase"),
+        "mode": state.get("mode"),
+        "last_updated": last,
+        "idle_hours": round(idle_h, 1),
+        "question": (state.get("question") or "")[:120],
+        "full_state_path": full_path,
+    })
+
+print(json.dumps({
+    "status": "ok" if candidates else "no-sessions",
+    "window_hours": window_hours,
+    "reconcile": reconcile,
+    "candidates": candidates,
+}, indent=2))
+PYEOF

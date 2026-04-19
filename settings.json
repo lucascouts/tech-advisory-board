@@ -1,0 +1,6 @@
+{
+  "subagentStatusLine": {
+    "command": "${CLAUDE_PLUGIN_ROOT}/scripts/statusline.sh",
+    "timeout": 1000
+  }
+}

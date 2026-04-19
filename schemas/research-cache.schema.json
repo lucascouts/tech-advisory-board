@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tech-advisory-board/research-cache.schema.json",
+  "title": "TAB Research Cache",
+  "description": "Keyed by sha256(normalized_query + tool + date_window). Scope is per-session by default; global shared cache lives under ${CLAUDE_PLUGIN_DATA}/shared-cache/cache.json with the same schema. Finalized in Block 2.",
+  "type": "object",
+  "properties": {
+    "cache_version": {"type": "integer", "const": 1},
+    "scope": {
+      "enum": ["session", "shared"],
+      "description": "session = per-session cache under .tab/sessions/<id>/. shared = cross-session under ${CLAUDE_PLUGIN_DATA}/shared-cache/. Optional; defaults to session when absent."
+    },
+    "entries": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "query_raw": {"type": "string"},
+          "query_normalized": {"type": "string"},
+          "tool": {"type": "string"},
+          "fetched_at": {"type": "string", "format": "date-time"},
+          "response_summary": {"type": "string"},
+          "sources": {"type": "array"},
+          "confidence": {"enum": ["high-conf", "med-conf", "low-conf", "unverified"]},
+          "category": {
+            "enum": ["volatile", "mature"],
+            "description": "TTL bucket. volatile (JS/AI, LLM ecosystems): 7-day freshness. mature (DBs, languages, compilers): 30-day freshness. Absent → treated as volatile."
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Computed from fetched_at + category TTL. Consumers MUST honor this when reading; writers populate it on insert."
+          },
+          "invalidated_at": {
+            "type": ["string", "null"],
+            "format": "date-time",
+            "description": "Set by `cache invalidate <topic>` when a user manually evicts the entry. Reads with invalidated_at != null are misses."
+          }
+        },
+        "required": ["query_normalized", "tool", "fetched_at"]
+      }
+    }
+  },
+  "required": ["cache_version", "entries"]
+}

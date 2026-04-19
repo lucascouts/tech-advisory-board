@@ -1,0 +1,165 @@
+{
+  "name": "tech-advisory-board",
+  "version": "0.1.0",
+  "description": "Multi-agent advisory board for technical decisions \u2014 stack selection, architecture choices, framework/database comparisons, project planning. Champions debate, Advisors evaluate, Scout maps landscape. Backed by current web research via MCPs (perplexity, context7, brave-search).",
+  "author": {
+    "name": "lucascouts",
+    "email": "lucascs@protonmail.com",
+    "url": "https://github.com/lucascouts"
+  },
+  "homepage": "https://github.com/lucascouts/tech-advisory-board",
+  "repository": "https://github.com/lucascouts/tech-advisory-board.git",
+  "license": "MIT",
+  "keywords": [
+    "tech-advisory",
+    "architecture",
+    "stack-selection",
+    "multi-agent",
+    "decision-making",
+    "technology-evaluation"
+  ],
+  "agents": [
+    "./agents/champion.md",
+    "./agents/advisor.md",
+    "./agents/researcher.md",
+    "./agents/auditor.md",
+    "./agents/supervisor.md"
+  ],
+  "skills": [
+    "./skills/tab",
+    "./skills/rechallenge",
+    "./skills/explain-synthesis"
+  ],
+  "outputStyles": "./output-styles/",
+  "mcpServers": {
+    "channel": {
+      "command": "node",
+      "args": [
+        "${CLAUDE_PLUGIN_ROOT}/servers/channel/index.js"
+      ]
+    }
+  },
+  "channels": [
+    {
+      "server": "channel",
+      "userConfig": {
+        "telegram_bot_token": {
+          "title": "Telegram bot token (optional)",
+          "description": "Telegram Bot API token for the `channel` MCP server. Leave empty to disable Telegram delivery. When set, pair with telegram_chat_id. Read by servers/channel/index.js as TELEGRAM_BOT_TOKEN (legacy) or CLAUDE_PLUGIN_OPTION_telegram_bot_token.",
+          "type": "string",
+          "sensitive": true
+        },
+        "telegram_chat_id": {
+          "title": "Telegram chat ID (optional)",
+          "description": "Destination chat ID for Telegram push (e.g. your numeric user ID or a group ID). Read as TELEGRAM_CHAT_ID (legacy) or CLAUDE_PLUGIN_OPTION_telegram_chat_id.",
+          "type": "string",
+          "sensitive": false
+        },
+        "channel_webhook_url": {
+          "title": "Generic webhook URL (optional)",
+          "description": "Fallback destination for a generic JSON POST when Telegram is not configured or as an additional sink. Read as CHANNEL_WEBHOOK_URL (legacy) or CLAUDE_PLUGIN_OPTION_channel_webhook_url.",
+          "type": "string",
+          "sensitive": true
+        }
+      }
+    }
+  ],
+  "userConfig": {
+    "max_cost_per_session_usd": {
+      "title": "Max cost per session (USD)",
+      "description": "Abort a TAB session if the estimated cost exceeds this threshold (USD). Overrides .tab/config.json budget.max_cost_per_session_usd.",
+      "type": "number",
+      "sensitive": false,
+      "default": 5.0
+    },
+    "warn_at_usd": {
+      "title": "Cost warning threshold (USD)",
+      "description": "Emit a soft cost warning when session spend crosses this threshold (USD).",
+      "type": "number",
+      "sensitive": false,
+      "default": 3.0
+    },
+    "language_preference": {
+      "title": "Preferred output language",
+      "description": "Preferred output language as a BCP 47 tag (e.g. en, pt-BR). Used when the user's first message is ambiguous. Applies globally across all projects.",
+      "type": "string",
+      "sensitive": false
+    },
+    "default_mode": {
+      "title": "Default session mode",
+      "description": "Mode used when the Moderator's complexity classification is ambiguous. One of Instant, Fast, Standard, Complete, Complete+. Leave unset to let the Moderator classify automatically.",
+      "type": "string",
+      "sensitive": false
+    },
+    "auditor_enabled": {
+      "title": "Enable mandatory Auditor",
+      "description": "When true (default), the Auditor subagent runs in Complete / Complete+ / Rechallenge modes. Set false to skip \u2014 requires an auditor_override_reason in .tab/config.json.",
+      "type": "boolean",
+      "sensitive": false,
+      "default": true
+    },
+    "supervisor_gate_enabled": {
+      "title": "Enable Supervisor consensus-theater gate",
+      "description": "When true (default), the Moderator invokes the Supervisor subagent if any of the four \u00a712.1 consensus-theater triggers fire after the advisor phase. Set false to disable the gate.",
+      "type": "boolean",
+      "sensitive": false,
+      "default": true
+    },
+    "adr_dir_override": {
+      "title": "ADR output directory override",
+      "description": "Override the default .tab/decisions/ directory for generated ADRs. Absolute path or relative to the project root. Leave unset to use the default.",
+      "type": "string",
+      "sensitive": false
+    },
+    "champion_model": {
+      "title": "Champion agent model override",
+      "description": "Override the model used by the Champion subagent. Defaults to claude-opus-4-7. Organizations with a tighter budget can pin sonnet via modelOverrides (e.g. 'claude-sonnet-4-6'). Empty = use the agent default.",
+      "type": "string",
+      "sensitive": false
+    },
+    "auditor_model": {
+      "title": "Auditor agent model override",
+      "description": "Override the model used by the Auditor subagent. Defaults to claude-opus-4-7 with effort=xhigh. Downgrading to sonnet weakens adversarial verification \u2014 use with care.",
+      "type": "string",
+      "sensitive": false
+    },
+    "advisor_model": {
+      "title": "Advisor agent model override",
+      "description": "Override the model used by the Advisor subagents. Defaults to sonnet. Pinning opus raises cost meaningfully because N advisors run in parallel.",
+      "type": "string",
+      "sensitive": false
+    },
+    "model_policy": {
+      "title": "Model selection policy",
+      "description": "How the Moderator picks a model for each subagent spawn. 'static' honors only the *_model knobs. 'budget-aware' downgrades Champion/Auditor toward Sonnet when <30% of the cost ceiling remains. 'context-aware' additionally reacts to cache-hit rate, MCP availability, novelty vs vanguard-timeline, and prompt-cache warmth (see skills/tab/references/model-policy.md).",
+      "type": "string",
+      "sensitive": false,
+      "default": "budget-aware"
+    },
+    "model_policy_overrides": {
+      "title": "Per-mode model overrides",
+      "description": "Optional JSON object mapping canonical mode names to model IDs, e.g. {\"Instant\":\"haiku\",\"Fast\":\"sonnet\",\"Complete\":\"opus\"}. Applied after the policy engine; wins over the engine's recommendation. Empty string = no per-mode overrides.",
+      "type": "string",
+      "sensitive": false
+    },
+    "strict_paths": {
+      "title": "Restrict automatic TAB activation to project directories",
+      "description": "When true, the tab skill auto-activates only in directories containing a known project manifest (package.json, pyproject.toml, Cargo.toml, go.mod, pom.xml, Gemfile, composer.json, build.gradle). Manual invocation via /tech-advisory-board:tab always works. Default: false (preserves greenfield use, e.g. 'which stack for X?' in empty directories).",
+      "type": "boolean",
+      "sensitive": false,
+      "default": false
+    },
+    "agent_team_mode": {
+      "title": "Execution mode for Complete / Complete+ cross-examination",
+      "description": "Execution backend for parallel champion cross-examination in Complete/Complete+. 'subagents' (default, STABLE) = simulated fan-out via the Agent tool. 'agent_teams' = real multi-agent via Claude Code Agent Teams, which remains EXPERIMENTAL per Anthropic docs (requires CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1; ~2-3x base tokens; API may change between minor versions — pin your CC baseline). 'auto' = prefer Agent Teams when the env var is set, fall back to subagents silently otherwise. See skills/tab/references/agent-teams-mode.md.",
+      "type": "string",
+      "enum": [
+        "subagents",
+        "agent_teams",
+        "auto"
+      ],
+      "default": "subagents",
+      "sensitive": false
+    }
+  }
+}
