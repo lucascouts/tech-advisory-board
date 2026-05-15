@@ -1,6 +1,6 @@
 {
   "name": "channel",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "private": true,
   "description": "MCP stdio server for the tech-advisory-board plugin. Routes Moderator/Notification messages to a push channel (Telegram Bot API or generic webhook).",
   "type": "module",

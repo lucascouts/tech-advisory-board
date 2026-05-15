@@ -28,7 +28,7 @@ import { URL } from "node:url";
 
 const PROTOCOL_VERSION = "2025-06-18";
 const SERVER_NAME = "channel";
-const SERVER_VERSION = "0.1.2";
+const SERVER_VERSION = "0.1.3";
 
 const SEVERITY_VALUES = ["info", "warn", "critical"];
 
