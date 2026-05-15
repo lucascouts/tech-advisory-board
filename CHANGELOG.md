@@ -7,7 +7,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-_No changes yet._
+### Fixed
+
+- **Drop the `WorktreeCreate` hook registration** (and delete the
+  matching `scripts/on-worktree-create.sh`). The Claude Code harness
+  treats this event as **productive**, not observational: it consumes
+  the hook's stdout as the absolute path of the created worktree, and
+  the presence of any registered handler disables the native
+  `git worktree add` code path. TAB's hook exited 0 with empty stdout,
+  so the harness aborted worktree creation with
+  `WorktreeCreate hook failed: no successful output` (renamed in
+  Claude Code 2.1.142+ to `…hook succeeded but returned no worktree
+  path…`). The net effect was that **any sub-agent declaring
+  `isolation: worktree` failed before starting in every project where
+  TAB was enabled** — even in valid git repositories — affecting both
+  TAB itself and any other plugin that relied on worktree isolation
+  (e.g. `bentoo-dev:ebuild-creator`).
+
+### Added
+
+- **`PostToolUse(EnterWorktree|ExitWorktree)`** hook +
+  `scripts/on-worktree-tool.sh` — primary observer of the Rechallenge
+  skill's worktree usage. Pairs `enter`/`exit` events by the
+  host-provided `tool_use_id` and captures `duration_ms` when
+  attached. Records land in `<session>/worktrees.ndjson` with
+  `source: "tool"`.
+- **`scripts/snapshot-worktrees.sh`** — safety-net observer registered
+  on `SubagentStart` and `SubagentStop`. Diffs the output of
+  `git worktree list --porcelain` against the previous snapshot stored
+  in `<session>/worktrees-snapshot.json` and emits `create`/`remove`
+  events (`source: "snapshot"`) for any deltas. Catches worktrees
+  created or removed by paths that bypass the tool surface (e.g.
+  agents running `git worktree add` via Bash, harness-native paths,
+  external mutations between sessions). First run on a fresh session
+  is a silent baseline so pre-existing worktrees aren't logged.
+- **ARCHITECTURE §4.4 — Host hook contract** reference table
+  distinguishing observational, gating, and productive Claude Code
+  hook events. Read this before registering any new hook.
+
+### Changed
+
+- `WorktreeRemove` is unchanged in role but now documented as the
+  observational counterpart for harness-driven removals (it remains
+  the only piece of the original create/remove pair that aligned with
+  the host contract).
 
 ## [0.1.2] — 2026-04-19
 

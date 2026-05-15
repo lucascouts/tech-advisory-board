@@ -69,8 +69,9 @@ Events are declared in two layers:
 | `Notification` | global | `scripts/on-notification.sh` | Route failed Rechallenge sessions through `channel` MCP push (Telegram / webhook) |
 | `TeammateIdle` | global | `scripts/on-teammate-idle.sh` | Capture teammate stalls in real Agent Teams cross-exam → `telemetry.json.teammate_idles[]` |
 | `ConfigChange` | global | `scripts/on-config-change.sh` | Record user/project/local/policy settings mutations into `state-full.json.config_changes[]` |
-| `WorktreeCreate` | global | `scripts/on-worktree-create.sh` | Append create events to `<session>/worktrees.ndjson` for Rechallenge worktree auditing |
-| `WorktreeRemove` | global | `scripts/on-worktree-remove.sh` | Append remove events to the same ledger (pairs by `worktree_path`) |
+| `PostToolUse(EnterWorktree\|ExitWorktree)` | global | `scripts/on-worktree-tool.sh` | Primary observer of Rechallenge worktree usage — pairs `enter` / `exit` events by `tool_use_id` in `<session>/worktrees.ndjson` (source=`tool`) |
+| `WorktreeRemove` | global | `scripts/on-worktree-remove.sh` | Observational counterpart for harness-driven worktree removals (source=`remove`) |
+| `SubagentStart` / `SubagentStop` (snapshot) | global | `scripts/snapshot-worktrees.sh` | Safety-net diff against `git worktree list --porcelain`; logs creations / removals that bypassed the tool hooks (source=`snapshot`) |
 
 ### Bin commands (auto-added to PATH when plugin is active)
 

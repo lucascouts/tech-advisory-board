@@ -217,10 +217,34 @@ They fall into two categories regardless of layer:
 - **`ConfigChange`** — record user/project/local/policy/skills settings
   mutations into `state-full.config_changes[]`; flags sessions whose
   `config_snapshot` diverges from the current config mid-flight.
-- **`WorktreeCreate` / `WorktreeRemove`** — append create/remove events
-  to `<session>/worktrees.ndjson`. Pairs by `worktree_path` so the
-  Rechallenge worktree lifecycle is auditable without parsing Bash
-  exit status from `EnterWorktree`.
+- **Worktree lifecycle** — observed via three complementary sources,
+  all appending to `<session>/worktrees.ndjson` with a `source` field
+  identifying provenance:
+  - **`PostToolUse(EnterWorktree|ExitWorktree)`**
+    (`scripts/on-worktree-tool.sh`) — primary observer for the
+    Rechallenge skill. Pairs `enter` and `exit` events by the
+    host-provided `tool_use_id`; captures `duration_ms` when the host
+    attaches it. Source: `tool`.
+  - **`WorktreeRemove`** (`scripts/on-worktree-remove.sh`) —
+    observational counterpart for worktrees removed by the harness
+    (e.g. cleanup of `isolation: worktree` sub-agents). Source:
+    `remove`.
+  - **`SubagentStart` / `SubagentStop` snapshot**
+    (`scripts/snapshot-worktrees.sh`) — safety-net diff against
+    `git worktree list --porcelain`. Catches creations / removals that
+    bypassed the two hooks above, such as agents calling
+    `git worktree add` via Bash or harness-native paths that skip
+    the tool surface. The first run on a fresh session establishes a
+    silent baseline so pre-existing worktrees aren't logged. Source:
+    `snapshot`.
+
+  > **Why not register a `WorktreeCreate` hook?** The Claude Code
+  > harness treats that event as *productive*: the hook's stdout is
+  > consumed as the worktree path, and registering any handler
+  > disables the native `git worktree add` code path. A
+  > best-effort instrumentation hook that prints nothing would
+  > therefore break `isolation: worktree` for every plugin in every
+  > project where TAB is enabled. See the contract table in §4.4.
 
 ### 4.3 Monitors
 
@@ -241,6 +265,31 @@ dispatch of a session — non-TAB sessions pay zero I/O:
 > A session that invokes only `rechallenge` (without first invoking
 > `tab`) runs without these monitors. This is intentional — rechallenge
 > is short-lived and does not spawn the fan-out that `tab` does.
+
+### 4.4 Host hook contract — observational vs productive
+
+Not every hook event in Claude Code is purely observational. Some are
+**productive**: the harness consumes the hook's stdout as part of its
+own control flow, and registering any handler disables the native code
+path that would otherwise run. Treating a productive event as a
+best-effort instrumentation point silently breaks the host behavior
+behind it.
+
+Read this table before adding a new hook registration — confirm the
+event's role in the current Claude Code release.
+
+| Event | Role | What the harness consumes | Safe to register as observational? |
+|---|---|---|---|
+| `PreToolUse`, `Stop`, `PreCompact`, `PermissionRequest` | **Gate** | `decision: "block" / "approve" / null` + `reason` | Yes, **as long as the script never emits a `decision`** — silent stdout is treated as no-op. |
+| `WorktreeCreate` | **Productive** | Hook stdout = absolute path of the created worktree. The presence of any handler disables `git worktree add` | **No.** A handler that doesn't actually create the worktree and print its path will fail every `isolation: worktree` sub-agent globally. |
+| `SessionStart` `additionalContext` | Productive (additive) | Stdout appended to the model's context | Safe to leave stdout empty; only write when you mean to inject context. |
+| `WorktreeRemove`, `PostToolUse`, `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `CwdChanged`, `FileChanged`, `ConfigChange`, `Elicitation`, `Notification`, `TeammateIdle`, `SessionEnd`, `InstructionsLoaded`, `PermissionDenied`, `StopFailure` | **Observational** | Nothing — exit code is the only signal | Yes. Best-effort scripts that exit 0 are fine. |
+
+When in doubt, search the host binary (`strings $(which claude)`) for
+the event name and look at the surrounding error templates — productive
+events typically carry a "hook succeeded but returned no …" message
+nearby. The `WorktreeCreate` lesson (logged in `CHANGELOG` 0.1.3) is the
+canonical example.
 
 ## 5. Critical invariants
 
